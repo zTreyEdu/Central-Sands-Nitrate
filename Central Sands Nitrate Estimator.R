@@ -60,7 +60,7 @@ getCoordsOfInterest <- function() {
 }
 
 #' User input for the timeframe we should be looking back
-#' Time is currently hard-coded, but could be modified to allow for user-inpu
+#' Time is currently hard-coded, but could be modified to allow for user-input
 #' @returns a time in years
 getTimeFrameOfInterest <- function() {
   timeInYears <- 100
@@ -115,7 +115,7 @@ getFlowLinesInBufferZone <- function(coordBufferZone, allModpathFlowlines) {
 #' Finds the contributing points of our flow lines
 #' @param flowLinesInBufferZone a dataframe of linestring objects, the flowlines that intersected our buffered region
 #' @returns a dataframe of particle IDs for the contributing points
-getContributingPointsFromFlowlines <- function(flowLinesInBufferZone) {
+getContributingPointIDsFromFlowlines <- function(flowLinesInBufferZone) {
   contributingPoints <- data.frame(partidloc_ = flowLinesInBufferZone$conversion_to_partidloc_)
   return(contributingPoints)
 }
@@ -126,10 +126,10 @@ getContributingPointsFromFlowlines <- function(flowLinesInBufferZone) {
 #' @param timeFrameOfInterest a time in years
 #' @param allModPathFlowLines line string objects, flow lines from our modpath model output
 #' @returns a data frame of particle IDs
-getContributingPoints <- function(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines) {
+getContributingPointsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines) {
   coordBufferZone <- getCoordBufferZone(coordsOfInterest, buffer)
   flowLinesInBufferZone <- getFlowLinesInBufferZone(coordBufferZone,allModpathFlowlines)
-  contributingPoints <- getContributingPointsFromFlowlines(flowLinesInBufferZone)
+  contributingPoints <- getContributingPointIDsFromFlowlines(flowLinesInBufferZone)
   return(contributingPoints)
 }
 
@@ -206,7 +206,7 @@ createPlots <- function(estimatedNitrateLevels) {
 # ----2 Main Tag----
 #' Main callable tag. Run this to estimate nitrate levels for a given set of coordinates
 #' @returns estimated nitrate levels for a given set of coordinates, as well as some plots
-main <- function() {
+mainNitrateEstimator <- function() {
   # ----2.1 User Input----
   coordsOfInterest <- getCoordsOfInterest()
   timeFrameOfInterest <- getTimeFrameOfInterest()
@@ -218,7 +218,7 @@ main <- function() {
   allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
   
   # ----2.3 Find contributing points for our coordinate----
-  contributingPoints <- getContributingPoints(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines)
+  contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines)
   print(contributingPoints)
   displayCoordsForContribPoints(allModpathStartingPoints, contributingPoints)
   
@@ -236,4 +236,4 @@ main <- function() {
   print("placeholder that we've finished")
 }
 
-#main()
+#mainNitrateEstimator()
