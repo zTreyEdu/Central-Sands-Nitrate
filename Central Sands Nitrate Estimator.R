@@ -100,6 +100,11 @@ getAllModpathFlowLines <- function() {
   flowlines1$conversion_to_partidloc_  <- (flowlines1$particleid + 79740)
   
   allModpathFlowlines <- rbind(flowlines0, flowlines1)
+  
+  #remove rows where the travel time is 0. These won't have start/end points, and are essentially bogus rows
+  allModpathFlowlines <- allModpathFlowlines %>%
+    filter(time != 0)
+  
   return(allModpathFlowlines)
 }
 
