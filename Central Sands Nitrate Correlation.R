@@ -54,13 +54,13 @@ getFlowLinesInNitrateCell <- function(nitrateCells, allModpathFlowlines) {
 #' @param dotCount a counter variable to keep track of how many times we've gone through our loop
 #' @returns a counter to be passed back in to the function
 scrDots <- function(dotCount) {
+  dotCount <- (dotCount + 1)
   if ((dotCount %% 1000) == 0 ) {
     cat(dotCount %/% 1000)
   }
   else if ((dotCount %% 100) == 0) {
     cat(".")
   }
-  dotCount <- (dotCount + 1)
   return(dotCount)
 }
 
