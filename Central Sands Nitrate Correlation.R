@@ -3,6 +3,8 @@
 
 #TODO
 #t02 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
+#t03 - this real slow. run profvis to check slowsteps (it's likely my for loops). Also see i t02 would help
+#t04 - 
 
 # -------------------Code begins here -----------------------
 
@@ -18,6 +20,7 @@ library(sf)
 library(ggplot2)
 library(raster)
 library(dplyr)
+library(tidyr)
 #library(devtools)
 #library(profvis)
 
@@ -30,6 +33,8 @@ source("U:/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
 getNitrateCells <- function() {
   nitrateCells <- st_read(dsn = "U:/Trey Coury/DS002-dataset01/CSGCC_Nitrate_Neonicotinoids.gdb", layer = "Nitrate_stats_per_section_Non_PWS_2017_2022")
   nitrateCells <- st_transform(nitrateCells, crs = 3070)
+  nitrateCells <- nitrateCells %>%
+    select(PLSS, MEAN_Nitrate_mg_L_0, MEDIAN_Nitrate_mg_L_0, Shape_Length, Shape_Area, Shape)
   return(nitrateCells)
 }
 
@@ -79,32 +84,53 @@ getContributingPointsInfoForNitrateCells <- function(nitrateCells, timeFrameOfIn
     flowlinesInCell <- nitrateCells[["IntersectingFlowlines"]][[cell]]
     
     #initialize helper vectors
-    particleRowIndexVector <- c()
-    landUseVector <- c()
+    particleRowIndexString <- ""
+    landUseString <- ""
     
     #for each flowline in a cell
     for (flowlineIndex in flowlinesInCell) {
       partidloc <- allModpathFlowlines[["conversion_to_partidloc_"]][[flowlineIndex]]
       particleRowIndex <- which(allModpathStartingPoints$partidloc_ == partidloc)
       landUse <- allModpathStartingPoints[["CDL_2022_2"]][[particleRowIndex]]
-      particleRowIndexVector <- c( particleRowIndexVector,particleRowIndex)
-      landUseVector <- c(landUseVector, landUse)
+      particleRowIndexString <- paste(particleRowIndexString, particleRowIndex, sep = " " )
+      landUseString <- paste(landUseString, landUse, sep = " ")
     }
     
-    if (length(particleRowIndexVector) == 0) {
-      particleRowIndexVector <- "no particles"
+    particleRowIndexString <- trimws(particleRowIndexString)
+    
+    
+    if (nchar(particleRowIndexString) == 0) {
+      particleRowIndexString <- "no particles"
     }
     
-    if (length(landUseVector) == 0) {
-      landUseVector <- "no land use"
+    if (nchar(landUseString) == 0) {
+      landUseString <- "no land use"
     }
     
-    nitrateCells[["ContributingParticleRowIndex"]][[cell]] <- particleRowIndexVector
-    nitrateCells[["ContributingParticleLandUse"]][[cell]] <- landUseVector
+    nitrateCells[["ContributingParticleRowIndex"]][[cell]] <- particleRowIndexString
+    nitrateCells[["ContributingParticleLandUse"]][[cell]] <- landUseString
   }
 
   return(nitrateCells)  
 }
+
+createLandTypeColumns <- function(nitrateCells) {
+  
+  nitrateCells <- nitrateCells %>%
+    filter(ContributingParticleLandUse != "no land use")
+  
+  lengthenedNitrateCells <- nitrateCells %>%
+    separate_longer_delim(ContributingParticleLandUse, delim = ",") %>%
+    mutate(ContributingParticleLandUse = as.numeric(ContributingParticleLandUse))
+  
+  
+  widenedNitrateCells <- lengthenedNitrateCells %>%
+    group_by(PLSS, ContributingParticleLandUse) %>%
+    tally() %>%
+    pivot_wider(names_from = ContributingParticleLandUse, values_from = n, names_prefix = "Land_Use_", values_fill = 0)
+  
+}
+
 
 # ----2 Main Callable Tag----
 #' main callable tag for determining the correlation between nitrogen levels measured in wells and the land use of contributing zones
@@ -118,13 +144,13 @@ mainNitrateCorrelator <- function(){
   nitrateCells <- getNitrateCells()
   
   # ----2.3 Find contributing points for our Nitrate Cells----
-  nitrateCellsWithContributingPointsInfo <- getContributingPointsInfoForNitrateCells(nitrateCells,timeFrameOfInterest,allModpathFlowlines,allModpathStartingPoints)
+  nitrateCells <- getContributingPointsInfoForNitrateCells(nitrateCells,timeFrameOfInterest,allModpathFlowlines,allModpathStartingPoints)
   
-  # ----2.5 Find the estimated nitrogen impacts given the land use----
-  #this loads in a data frame of joined up data into a regression analysis tool
+  # ----2.4 Find the estimated nitrogen impacts given the land use----
+  nitrateCells <- createLandTypeColumns(nitrateCells)
+  nitrateCellsMLR <- getNitrateCellsMLR(nitrateCells)
   
   # ----2.6 Output to the user----
   #probably just a call to a function that print stuff and makes some plots
   
 }
-
