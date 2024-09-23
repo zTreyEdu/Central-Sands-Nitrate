@@ -97,6 +97,7 @@ getContributingPointsInfoForNitrateCells <- function(nitrateCells, timeFrameOfIn
     }
     
     particleRowIndexString <- trimws(particleRowIndexString)
+    landUseString <- trimws(landUseString)
     
     
     if (nchar(particleRowIndexString) == 0) {
@@ -120,7 +121,7 @@ createLandTypeColumns <- function(nitrateCells) {
     filter(ContributingParticleLandUse != "no land use")
   
   lengthenedNitrateCells <- nitrateCells %>%
-    separate_longer_delim(ContributingParticleLandUse, delim = ",") %>%
+    separate_longer_delim(ContributingParticleLandUse, delim = " ") %>%
     mutate(ContributingParticleLandUse = as.numeric(ContributingParticleLandUse))
   
   
