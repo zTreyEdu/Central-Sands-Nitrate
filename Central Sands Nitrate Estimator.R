@@ -205,22 +205,14 @@ createPlots <- function(estimatedNitrateLevels) {
     theme_minimal() +
     scale_y_continuous(labels = scales::percent)
   ggsave("Relative Land Use of Contributing Zones.png", barPlot)
-  print(barPlot)
+  return(barPlot)
 }
 # ----2 Main Tag----
 #' Main callable tag. Run this to estimate nitrate levels for a given set of coordinates
 #' @returns estimated nitrate levels for a given set of coordinates, as well as some plots
-mainNitrateEstimator <- function() {
-  # ----2.1 User Input----
-  coordsOfInterest <- getCoordsOfInterest()
-  timeFrameOfInterest <- getTimeFrameOfInterest()
-  buffer <- getBuffer()
+
+runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, allModpathFlowlines, allModpathStartingPoints) {
   
-  # ----2.2 Read in datafiles----
-  allModpathFlowlines <- getAllModpathFlowLines()
-  allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
-  
-  # ----2.3 Find contributing points for our coordinate----
   contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines)
   print(contributingPoints)
   displayCoordsForContribPoints(allModpathStartingPoints, contributingPoints)
@@ -235,7 +227,23 @@ mainNitrateEstimator <- function() {
   
   # ----2.6 Output to the user----
   #probably just a call to a function that print stuff and makes some plots
-  createPlots(estimatedNitrateLevels)
-  print("placeholder that we've finished")
+  return(estimatedNitrateLevels)
+}
+
+mainNitrateEstimator <- function() {
+  # ----2.1 User Input----
+  coordsOfInterest <- getCoordsOfInterest()
+  timeFrameOfInterest <- getTimeFrameOfInterest()
+  buffer <- getBuffer()
+  
+  # ----2.2 Read in datafiles----
+  allModpathFlowlines <- getAllModpathFlowLines()
+  allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
+  
+  # ----2.3 Find Nitrate Estimates----
+  estimatedNitrateLevels <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, allModpathFlowlines, allModpathStartingPoints)
+  plots <- createPlots(estimatedNitrateLevels)
+  print(plots)
+  print("placeholder to know we're done")
 }
 
