@@ -4,6 +4,7 @@
 #TODO
 #t02 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
 #t03 - this real slow. run profvis to check slowsteps (it's likely my for loops). Also see if t02 would help
+#t04 - figure out how to properly use source() so that i can run this from anywhere (VPN or otherwise). I think i'd also need to extend that to anything reading from a file
 
 # -------------------Code begins here -----------------------
 
@@ -24,6 +25,7 @@ library(tidyr)
 #library(profvis)
 
 source("U:/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
+#source("//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
 
 # ----1 Define Functions----
 #' Read in shapefiles for our cells containing nitrate data
