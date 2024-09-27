@@ -3,7 +3,6 @@
 
 
 # TODO
-#t02 - figure out what units the buffer is in
 #t03 - figure out what value buffer should be set to
 #t04 - double check my RETURNs statements make sure i'm using correct with words like 'list' and 'dataframe' correctly
 #t05 - as of 9 Sept, this ~7 seconds to run. Per profvis, the file reading is 5 seconds of this. Perhaps there's a way to query a database, rather than just loading it in? I could look for performance gains, elsewhere Which might mean i actually need to learn how some of these APIs work. Alas.
@@ -39,7 +38,6 @@ library(dplyr)
 #'
 #' @param xCoord numeric, an x coordinate
 #' @param yCoord numeric, a y coordinate
-#'
 #' @returns an SF Point Object using CRS 3070
 createSFPoint <- function(xCoord, yCoord) {
   point_geom <- st_point(c(xCoord, yCoord))
@@ -54,8 +52,8 @@ createSFPoint <- function(xCoord, yCoord) {
 #' @returns coordinates stored as an SF Point Object
 getCoordsOfInterest <- function() {
   #89.3551954°W 44.4980914°N
-  xCoord <- -89.3551954 #t00
-  yCoord <- 44.4980914 #t00
+  xCoord <- -89.3551954
+  yCoord <- 44.4980914
   coords <- createSFPoint(xCoord, yCoord)
   return(coords)
 }
@@ -72,7 +70,7 @@ getTimeFrameOfInterest <- function() {
 #' Buffer size is currently hard-coded, but could be modified to allow for user-input
 #' @returns a number for our buffer size
 getBuffer <- function() {
-  buffer = 100 #t00, Ben's was set to 100, so just copying his for now. This stackexchange will prove helpful: https://stackoverflow.com/questions/54754277/what-unit-is-the-dist-argument-in-st-buffer-set-to-by-default
+  buffer = 100 #t03, Ben's was set to 100, so just copying his for now.
   return(buffer)
 }
 
@@ -219,7 +217,6 @@ mainNitrateEstimator <- function() {
   buffer <- getBuffer()
   
   # ----2.2 Read in datafiles----
-  #allModpathFlowlines <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/MODPATH_particles/Pathlines/CSLM_pathlines.shp")
   allModpathFlowlines <- getAllModpathFlowLines()
   allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
   
@@ -242,4 +239,3 @@ mainNitrateEstimator <- function() {
   print("placeholder that we've finished")
 }
 
-#mainNitrateEstimator()
