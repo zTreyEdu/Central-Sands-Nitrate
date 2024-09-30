@@ -144,7 +144,7 @@ displayCoordsForContribPoints <- function(allModpathStartingPoints, contributing
   foreignKey <- c("partidloc_" = "partidloc_")
   coordsForContribPoints <- allModpathStartingPoints %>%
     inner_join(contributingPoints, by = foreignKey) %>%
-    select(partidloc_, x, y)
+    dplyr::select(partidloc_, x, y) #using package::function notation as 'select' is a common name
   print(coordsForContribPoints) #t12 - Rather than grabbing columns x and y, i think there's somethign special i need to do to grab the coords from the point objects. Because I think the projection won't line up otherwise
 }
 
@@ -158,7 +158,7 @@ getLandUseMix <- function(allModpathStartingPoints, contributingPoints, timeFram
   foreignKey <- c("partidloc_" = "partidloc_")
   landUseMix <- allModpathStartingPoints %>%
     inner_join(contributingPoints, by = foreignKey) %>%
-    select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use
+    dplyr::select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use; #using package::function notation as 'select' is a common name
   return(landUseMix)
 }
 
