@@ -1,10 +1,4 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
+#Purpose: code for the UI for the Interactive Map, a shiny app
 #
 # Define UI for application
 dashboardPage(
