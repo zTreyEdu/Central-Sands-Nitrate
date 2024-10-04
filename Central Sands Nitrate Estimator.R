@@ -33,7 +33,6 @@ library(dplyr)
 #library(profvis)
 
 # ----1 Define Functions----
-
 #' Create an SF Point Object from a pair of coordinates
 #'
 #' @param xCoord numeric, an x coordinate
@@ -89,11 +88,11 @@ getCoordBufferZone <- function(coordsOfInterest, buffer) {
 #' (the specific numbers used have are a consequence of how the original ID genreation code was written)
 #' @returns a data frame that has our modpath flowlines, including a new column indicating which file a given row came from
 getAllModpathFlowLines <- function() {
-  flowlines0 <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_top_pathlines_0.shp")
+  flowlines0 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_0.shp")
   flowlines0$source_file <- "pathlines0"
   flowlines0$conversion_to_partidloc_ <- (flowlines0$particleid - 2)
   
-  flowlines1 <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_top_pathlines_1.shp")
+  flowlines1 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_1.shp")
   flowlines1$source_file <- "pathlines1"
   flowlines1$conversion_to_partidloc_  <- (flowlines1$particleid + 79740)
   
@@ -195,7 +194,7 @@ getEstimatedNitrateLevels <- function(landUseMix) {
 #' Create some plots for our users
 #' @note: function documented on 9 September 2024 when it was like pre-alpha version. Update later as appropriate. t11
 #' @param estimatedNitrateLevels a data frame of the landuse mix
-#' 
+#' @returns a bar plot of nitrate data
 createPlots <- function(estimatedNitrateLevels) {
   #bar plot
   barPlotTitle = "Relative Land Use of Contributing Zones"
@@ -207,10 +206,13 @@ createPlots <- function(estimatedNitrateLevels) {
   ggsave("Relative Land Use of Contributing Zones.png", barPlot)
   return(barPlot)
 }
-# ----2 Main Tag----
-#' Main callable tag. Run this to estimate nitrate levels for a given set of coordinates
-#' @returns estimated nitrate levels for a given set of coordinates, as well as some plots
 
+#' Core logic for our nitrate estimator
+#' @param coordsOfInterest the coordinates for which to estimate nitrate levels
+#' @param timeFrameOfInterest the time frame over which we should look
+#' @param buffer the radius of our buffer zone (in meters)
+#' @param allModpathFlowlines the flowlines generated from our MODPATH model
+#' @param allModpathStartingPoints the starting points from our MODPATH model
 runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, allModpathFlowlines, allModpathStartingPoints) {
   
   contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines)
@@ -230,6 +232,9 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, a
   return(estimatedNitrateLevels)
 }
 
+# ----2 Main Tag----
+#' Main callable tag. Run this to estimate nitrate levels for a given set of coordinates
+#' @returns estimated nitrate levels for a given set of coordinates, as well as some plots
 mainNitrateEstimator <- function() {
   # ----2.1 User Input----
   coordsOfInterest <- getCoordsOfInterest()
@@ -238,7 +243,7 @@ mainNitrateEstimator <- function() {
   
   # ----2.2 Read in datafiles----
   allModpathFlowlines <- getAllModpathFlowLines()
-  allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
+  allModpathStartingPoints <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
   
   # ----2.3 Find Nitrate Estimates----
   estimatedNitrateLevels <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, allModpathFlowlines, allModpathStartingPoints)

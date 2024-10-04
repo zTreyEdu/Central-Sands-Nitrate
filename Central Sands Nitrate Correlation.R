@@ -5,6 +5,7 @@
 #t02 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
 #t03 - this real slow. run profvis to check slowsteps (it's likely my for loops). Also see if t02 would help
 #t04 - figure out how to properly use source() so that i can run this from anywhere (VPN or otherwise). I think i'd also need to extend that to anything reading from a file
+#t05 - add handling for log(0), which is currently preventing LM from running 
 
 # -------------------Code begins here -----------------------
 
@@ -24,15 +25,14 @@ library(tidyr)
 #library(devtools)
 #library(profvis)
 
-source("U:/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
-#source("//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
+source("//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
 
 # ----1 Define Functions----
 #' Read in shapefiles for our cells containing nitrate data
 #' Taken from the Romano Database
 #' @returns a dataframe of polygon shapefiles with Nitrate information
 getNitrateCells <- function() {
-  nitrateCells <- st_read(dsn = "U:/Trey Coury/DS002-dataset01/CSGCC_Nitrate_Neonicotinoids.gdb", layer = "Nitrate_stats_per_section_Non_PWS_2017_2022")
+  nitrateCells <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/DS002-dataset01/CSGCC_Nitrate_Neonicotinoids.gdb", layer = "Nitrate_stats_per_section_Non_PWS_2017_2022")
   nitrateCells <- st_transform(nitrateCells, crs = 3070)
   nitrateCells <- nitrateCells %>%
     select(PLSS, MEAN_Nitrate_mg_L_0, MEDIAN_Nitrate_mg_L_0, Shape_Length, Shape_Area, Shape)
@@ -146,7 +146,14 @@ createLandTypeColumns <- function(nitrateCells) {
 #' @returns a summary of the regression analysis
 getNitrateCellsMLR <- function(nitrateCells) {
   regression <- lm(nitrateCells$MEAN_Nitrate_mg_L_0 ~ nitrateCells$Land_Use_12)
+  #regression <- lm(nitrateCells$LogMean ~ nitrateCells$Land_Use_12)
   return(summary(regression))
+}
+
+#'Just a tag to keep my experimental and testing plots
+testingPlots <- function(nitrateCells) {
+  hist(nitrateCells$Land_Use_1)
+  with(nitrateCells, hist(log(Land_Use_1)))
 }
 
 # ----2 Main Callable Tag----
@@ -157,7 +164,7 @@ mainNitrateCorrelator <- function(){
   
   # ----2.2 Read in datafiles----
   allModpathFlowlines <- getAllModpathFlowLines()
-  allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
+  allModpathStartingPoints <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
   nitrateCells <- getNitrateCells()
   
   # ----2.3 Find contributing points for our Nitrate Cells----
@@ -165,6 +172,12 @@ mainNitrateCorrelator <- function(){
   
   # ----2.4 Find the estimated nitrogen impacts given the land use----
   nitrateCells <- createLandTypeColumns(nitrateCells)
+  
+  #Set up for log plot t05 - add handling for 0
+  nitrateCells <- nitrateCells %>%
+    mutate(LogMean = if_else(MEAN_Nitrate_mg_L_0 != 0, log(MEAN_Nitrate_mg_L_0), 0))
+  
+  
   nitratePlot <- plot(nitrateCells$Land_Use_12, nitrateCells$MEAN_Nitrate_mg_L_0,
        xlab = "Count of Contributing Zones used to grow Sweet Corn",
        ylab = "Mean Nitrate (mg/L)",
@@ -172,6 +185,8 @@ mainNitrateCorrelator <- function(){
   print(nitratePlot)
   nitrateCellsMLR <- getNitrateCellsMLR(nitrateCells)
   print(nitrateCellsMLR)
+  
+  testingPlots(nitrateCells)
   
   # ----2.6 Output to the user----
   #probably just a call to a function that print stuff and makes some plots
