@@ -13,7 +13,7 @@ source("U:/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
 coordsOfInterest <- getCoordsOfInterest()
 timeFrameOfInterest <- getTimeFrameOfInterest()
 buffer <- getBuffer()
-allModpathFlowlines <- getAllModpathFlowLines()
+floDataSet <- getFloDataSet()
 allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
 
 
@@ -49,7 +49,7 @@ getRegionData <- function(pathLineBoundary, marker) {
 #' @returns a bar plot of nitrate data
 generateNitrateEstimates <- function(longitude, latitude) {
   selectedCoords <- createSFPoint(longitude, latitude)
-  estimatedNitrateLevels <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, allModpathFlowlines, allModpathStartingPoints)
+  estimatedNitrateLevels <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, allModpathStartingPoints)
   nitrateBarPlot <- createPlots(estimatedNitrateLevels)
   return(nitrateBarPlot)
 }
