@@ -87,31 +87,37 @@ getCoordBufferZone <- function(coordsOfInterest, buffer) {
 #' (the fortran code used to generate the flowlines had to be run several times and could not directly create unique IDs, hence the conversions)
 #' (the specific numbers used have are a consequence of how the original ID genreation code was written)
 #' @returns a data frame that has our modpath flowlines, including a new column indicating which file a given row came from
-getAllModpathFlowLines <- function() {
-  flowlines0 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_0.shp")
-  flowlines0$source_file <- "pathlines0"
-  flowlines0$conversion_to_partidloc_ <- (flowlines0$particleid - 2)
+getFloDataSet <- function() {
+  floDataSet0 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_0.shp")
+  floDataSet0$source_file <- "pathlines0"
+  floDataSet0$conversion_to_partidloc_ <- (floDataSet0$particleid - 2)
   
-  flowlines1 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_1.shp")
-  flowlines1$source_file <- "pathlines1"
-  flowlines1$conversion_to_partidloc_  <- (flowlines1$particleid + 79740)
+  floDataSet1 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_1.shp")
+  floDataSet1$source_file <- "pathlines1"
+  floDataSet1$conversion_to_partidloc_  <- (floDataSet1$particleid + 79740)
   
-  allModpathFlowlines <- rbind(flowlines0, flowlines1)
+  floDataSet <- rbind(floDataSet0, floDataSet1)
   
   #remove rows where the travel time is 0. These won't have start/end points, and are essentially bogus rows
-  allModpathFlowlines <- allModpathFlowlines %>%
+  floDataSet <- floDataSet %>%
     filter(time != 0)
   
-  return(allModpathFlowlines)
+  return(floDataSet)
+}
+#' Gets our modpath starting points by reading them from their shapefile
+#' @returns a data frame with our modpath starting points
+getAllModpathStartingPoints <- function() {
+  allModpathStartingPoints <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
+  return(allModpathStartingPoints)
 }
 
 #' Finds the flow lines that intersect with our buffer zone
 #' @param coordBufferZone a polygon object for the buffer zone in question 
-#' @param allModpathFlowlines linestring objects, flowlines from our modpath model output
+#' @param floDataSet linestring objects, flowlines from our modpath model output
 #' @returns a data frame of flowines
-getFlowLinesInBufferZone <- function(coordBufferZone, allModpathFlowlines) {
-  intersections <- st_intersects(coordBufferZone, allModpathFlowlines)
-  flowLinesInBufferZone <- allModpathFlowlines[intersections[[1]], ]
+getFlowLinesInBufferZone <- function(coordBufferZone, floDataSet) {
+  intersections <- st_intersects(coordBufferZone, floDataSet)
+  flowLinesInBufferZone <- floDataSet[intersections[[1]], ]
   return(flowLinesInBufferZone)
 }
 
@@ -127,11 +133,11 @@ getContributingPointIDsFromFlowlines <- function(flowLinesInBufferZone) {
 #' @param coordsOfInterest a set of coordinates for which to generate a buffer zone around
 #' @param buffer number, the size of the buffer to generate
 #' @param timeFrameOfInterest a time in years
-#' @param allModPathFlowLines line string objects, flow lines from our modpath model output
+#' @param floDataSet line string objects, flow lines from our modpath model output
 #' @returns a data frame of particle IDs
-getContributingPointsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines) {
+getContributingPointsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet) {
   coordBufferZone <- getCoordBufferZone(coordsOfInterest, buffer)
-  flowLinesInBufferZone <- getFlowLinesInBufferZone(coordBufferZone,allModpathFlowlines)
+  flowLinesInBufferZone <- getFlowLinesInBufferZone(coordBufferZone,floDataSet)
   contributingPoints <- getContributingPointIDsFromFlowlines(flowLinesInBufferZone)
   return(contributingPoints)
 }
@@ -211,11 +217,11 @@ createPlots <- function(estimatedNitrateLevels) {
 #' @param coordsOfInterest the coordinates for which to estimate nitrate levels
 #' @param timeFrameOfInterest the time frame over which we should look
 #' @param buffer the radius of our buffer zone (in meters)
-#' @param allModpathFlowlines the flowlines generated from our MODPATH model
+#' @param floDataSet the flowlines generated from our MODPATH model
 #' @param allModpathStartingPoints the starting points from our MODPATH model
-runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, allModpathFlowlines, allModpathStartingPoints) {
+runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, allModpathStartingPoints) {
   
-  contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, allModpathFlowlines)
+  contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
   print(contributingPoints)
   displayCoordsForContribPoints(allModpathStartingPoints, contributingPoints)
   
@@ -242,11 +248,11 @@ mainNitrateEstimator <- function() {
   buffer <- getBuffer()
   
   # ----2.2 Read in datafiles----
-  allModpathFlowlines <- getAllModpathFlowLines()
-  allModpathStartingPoints <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
+  floDataSet <- getfloDataSet()
+  allModpathStartingPoints <- getAllModpathStartingPoints()
   
   # ----2.3 Find Nitrate Estimates----
-  estimatedNitrateLevels <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, allModpathFlowlines, allModpathStartingPoints)
+  estimatedNitrateLevels <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, allModpathStartingPoints)
   plots <- createPlots(estimatedNitrateLevels)
   print(plots)
   print("placeholder to know we're done")
