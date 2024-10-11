@@ -88,11 +88,11 @@ getCoordBufferZone <- function(coordsOfInterest, buffer) {
 #' (the specific numbers used have are a consequence of how the original ID genreation code was written)
 #' @returns a data frame that has our modpath flowlines, including a new column indicating which file a given row came from
 getFloDataSet <- function() {
-  floDataSet0 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_0.shp")
+  floDataSet0 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/Particles_updated_June2024/1particle_top_pathlines_0.shp")
   floDataSet0$source_file <- "pathlines0"
   floDataSet0$conversion_to_partidloc_ <- (floDataSet0$particleid - 2)
   
-  floDataSet1 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_top_pathlines_1.shp")
+  floDataSet1 <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/Particles_updated_June2024/1particle_top_pathlines_1.shp")
   floDataSet1$source_file <- "pathlines1"
   floDataSet1$conversion_to_partidloc_  <- (floDataSet1$particleid + 79740)
   
@@ -107,7 +107,7 @@ getFloDataSet <- function() {
 #' Gets our modpath starting points by reading them from their shapefile
 #' @returns a data frame with our modpath starting points
 getAllModpathStartingPoints <- function() {
-  allModpathStartingPoints <- st_read(dsn = "//ad.wisc.edu/wgnhs/Everyone/Trey Coury/Central Sands Nitrate/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
+  allModpathStartingPoints <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
   return(allModpathStartingPoints)
 }
 
