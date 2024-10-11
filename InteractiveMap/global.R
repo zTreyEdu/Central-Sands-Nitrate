@@ -7,18 +7,18 @@ library(leaflet)
 library(dplyr)
 library(shinydashboard)
 
-source("U:/Trey Coury/Central Sands Nitrate/Central Sands Nitrate Estimator.R")
+source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Central Sands Nitrate Estimator.R")
 
 #Define some global variable
 coordsOfInterest <- getCoordsOfInterest()
 timeFrameOfInterest <- getTimeFrameOfInterest()
 buffer <- getBuffer()
 floDataSet <- getFloDataSet()
-allModpathStartingPoints <- st_read(dsn = "P:/Central_Sands_Nitrate_Transport/GIS/ModelOutput/Particles_updated_June2024/1particle_data_top_startpt.shp")
+allModpathStartingPoints <- getAllModpathStartingPoints()
 
 
 #Draw a boundary line for our pathline model
-pathLineBoundary <- st_read(dsn = "U:/Trey Coury/ArcGIS/MyProject/Pathline Boundary.shp")
+pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/Pathline Boundary.shp")
 pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
   mutate(fill_color = "#1C00ff00")
 
