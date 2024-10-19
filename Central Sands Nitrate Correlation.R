@@ -6,6 +6,7 @@
 #t03 - this real slow. run profvis to check slowsteps (it's likely my for loops). Also see if t02 would help
 #t04 - figure out how to properly use source() so that i can run this from anywhere (VPN or otherwise). I think i'd also need to extend that to anything reading from a file
 #t05 - add handling for log(0), which is currently preventing LM from running 
+#t06 - make a swap to as.character()
 
 # -------------------Code begins here -----------------------
 
@@ -31,11 +32,12 @@ source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/
 # ----1 Define Functions----
 #' Read in shapefiles for our cells containing nitrate data
 #' Taken from the Romano Database
+#' This data will be abbreviated using NTC
 #' @returns a dataframe of polygon shapefiles with Nitrate information
-getNitrateCells <- function() {
-  nitrateCells <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/DS002-dataset01/CSGCC_Nitrate_Neonicotinoids.gdb", layer = "Nitrate_stats_per_section_Non_PWS_2017_2022")
-  nitrateCells <- st_transform(nitrateCells, crs = 3070)
-  return(nitrateCells)
+getNtcDataSet <- function() {
+  ntcDataSet <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/DS002-dataset01/CSGCC_Nitrate_Neonicotinoids.gdb", layer = "Nitrate_stats_per_section_Non_PWS_2017_2022")
+  ntcDataSet <- st_transform(ntcDataSet, crs = 3070)
+  return(ntcDataSet)
 }
 
 #' Given a set of polygons and a set of lines, finds the intersections
@@ -129,7 +131,7 @@ createLandTypeColumns <- function(nitrateCells) {
   
   landUseTallyLong <- nitrateCells %>%
     separate_longer_delim(ContributingParticleLandUse, delim = " ") %>%
-    mutate(ContributingParticleLandUse = as.numeric(ContributingParticleLandUse))
+    mutate(ContributingParticleLandUse = as.numeric(ContributingParticleLandUse)) #TODO t06 - I think switch this to as.character, since these are categories
   
   
   landUseTallyWide <- landUseTallyLong %>%
@@ -270,43 +272,43 @@ mainNitrateCorrelator <- function(){
   floDataSet <- getFloDataSet() #change to floDataSet
   stpDataSet <- getStpDataSet()
   lndDataSet <- getLndDataSet()
-  nitrateCells <- getNitrateCells()
-  nitrateCells <- slice_sample(nitrateCells, n = 500)
+  ntcDataSet <- getNtcDataSet()
+  ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
   
   # ----2.2.5 Analyze the cell's land use on nitrate levels----
-  cellLandUseRegression <- cellLandUseAnalysis(nitrateCells, lndDataSet)
+  cellLandUseRegression <- cellLandUseAnalysis(ntcSampleSet, lndDataSet)
   
   # ----2.3 Find contributing points for our Nitrate Cells----
-  nitrateCells <- getContributingPointsInfoForNitrateCells(nitrateCells,timeFrameOfInterest,floDataSet,stpDataSet)
+  ntcSampleSet <- getContributingPointsInfoForNitrateCells(ntcSampleSet,timeFrameOfInterest,floDataSet,stpDataSet)
   
   # ----2.4 Find the estimated nitrogen impacts given the land use----
-  nitrateCells <- createLandTypeColumns(nitrateCells)
+  ntcSampleSet <- createLandTypeColumns(ntcSampleSet)
   
   # ----2.6 Output to the user----
   #probably just a call to a function that print stuff and makes some plots
   
   #Summary from WiscLand data set
-  wisclandSummary <- wisclandAnalysis(nitrateCells, stpDataSet)
+  wisclandSummary <- wisclandAnalysis(ntcSampleSet, stpDataSet)
   
   
   #Summary for selected land use
-  nitrateCells <- nitrateCells %>%
+  ntcSampleSet <- ntcSampleSet %>%
     mutate(LogMean = if_else(MEAN_Nitrate_mg_L_0 != 0, log(MEAN_Nitrate_mg_L_0), 0))
   
-  nitrateCells <- nitrateCells %>%
+  ntcSampleSet <- ntcSampleSet %>%
     mutate(percentCorn = (Land_Use_1/Total_Contrib_Zones), percentSweetCorn=(Land_Use_12/Total_Contrib_Zones), percentPotato = (Land_Use_43/Total_Contrib_Zones))
 
-  nitratePlot <- plot((nitrateCells$percentPotato + nitrateCells$percentCorn + nitrateCells$percentSweetCorn), nitrateCells$MEAN_Nitrate_mg_L_0,
+  nitratePlot <- plot((ntcSampleSet$percentPotato + ntcSampleSet$percentCorn + ntcSampleSet$percentSweetCorn), ntcSampleSet$MEAN_Nitrate_mg_L_0,
                       xlab = "Fraction of High Ag Contributing Zones (Corn + Sweet Corn + Potato)",
                       ylab = "Mean Nitrate (mg/L)",
                       main = "Nitrate vs. Land Use in Contributing Zones")
-  nitrateRegression <- lm((nitrateCells$MEAN_Nitrate_mg_L_0) ~ nitrateCells$percentPotato + nitrateCells$percentCorn + nitrateCells$percentSweetCorn)
+  nitrateRegression <- lm((ntcSampleSet$MEAN_Nitrate_mg_L_0) ~ ntcSampleSet$percentPotato + ntcSampleSet$percentCorn + ntcSampleSet$percentSweetCorn)
   summary(nitrateRegression)
   print(nitratePlot)
-  nitrateCellsMLR <- getNitrateCellsMLR(nitrateCells)
+  nitrateCellsMLR <- getNitrateCellsMLR(ntcSampleSet)
   print(nitrateCellsMLR)
   
   # ----2.6.1 tag for exploratory Data Analysis----
-  dataExplorer(nitrateCells)
+  dataExplorer(ntcSampleSet)
   
 }
