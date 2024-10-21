@@ -238,7 +238,8 @@ wisclandAnalysis <- function(ntcSet, stpSet) {
 #' Objects from this data set will be abbreviated as LND objects
 #' @returns a raster data set
 getLndDataSet <- function() {
-  lndDataSet <- rast("//ad.wisc.edu/wgnhs/GIS_Library/library/State/Landcover/wiscland2/wiscland2_dataset/level3/wiscland2_level3.tif")
+  #lndDataSet <- rast("//ad.wisc.edu/wgnhs/GIS_Library/library/State/Landcover/wiscland2/wiscland2_dataset/level3/wiscland2_level3.tif") #WISCLAND
+  lndDataSet <- rast("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/GIS/CropScapeData/CDL_2022_20231127143930_554525100.tif")
   lndDataSet <- project(lndDataSet, "EPSG:3070")
   return(lndDataSet)
 }
@@ -246,8 +247,9 @@ getLndDataSet <- function() {
 #' Given a set of polygons and a raster, finds the percentage of the raster categories in each polygon
 #' @param ntcSet a dataframe of nitrate cell polygons
 #' @param lndSet a SpatRaster of land cover
+#' @param activeRasterCat the active category to use for our raster. Use 7 for WISCLAND2-Level3; use 4 for CropScape
 #' @returns the ntcSet dataframe with information about how it overlays with the lndSet raster
-mergeLNDInfo <- function(ntcSet, lndSet) {
+mergeLNDInfo <- function(ntcSet, lndSet, activeRasterCat) {
   #Make sure our CRSs match
   ntcSet <- st_transform(ntcSet, crs(lndSet))
   
@@ -258,7 +260,7 @@ mergeLNDInfo <- function(ntcSet, lndSet) {
   dotCount <- 0
   
   #Create a matrix to keep track of our counts
-  activeCat(lndSet) <- 7 #for this raster, category 7 is our cls_desc_3 column
+  activeCat(lndSet) <- activeRasterCat
   lndCategories <- levels(lndSet)
   lndCatNames <- unlist(lapply(lndCategories, function(x) x$cls_desc_3)) #pull out category names from cls_desc_3
   lndCatNames <- paste0(colPrefix,lndCatNames)
@@ -374,13 +376,14 @@ mainNitrateCorrelator <- function(){
   floDataSet <- getFloDataSet()
   stpDataSet <- getStpDataSet()
   lndDataSet <- getLndDataSet()
+  activeRasterCat <- 4
   ntcDataSet <- getNtcDataSet()
   set.seed(19058) #control our slice sample call for reproducibility
-  #ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
-  ntcSampleSet <- ntcDataSet
+  ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
+  #ntcSampleSet <- ntcDataSet
   
   # ----2.2.5 Analyze the cell's land use on nitrate levels----
-  ntcSampleSet <- mergeLNDInfo(ntcSampleSet, lndDataSet)
+  ntcSampleSet <- mergeLNDInfo(ntcSampleSet, lndDataSet, activeRasterCat)
   
   # ----2.3 Find contributing points for our Nitrate Cells----
   ntcSampleSet <- getContributingPointsInfoForNitrateCells(ntcSampleSet,timeFrameOfInterest,floDataSet,stpDataSet)
