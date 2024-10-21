@@ -7,7 +7,6 @@
 #t04 - figure out how to properly use source() so that i can run this from anywhere (VPN or otherwise). I think i'd also need to extend that to anything reading from a file
 #t05 - add handling for log(0), which is currently preventing LM from running 
 #t06 - make a swap to as.character()
-#t07 - swap the NTR names to be NTC instead. Not sure at what point I just changed my mind on that, but i need to update it
 
 # -------------------Code begins here -----------------------
 
@@ -126,25 +125,35 @@ getContributingPointsInfoForNitrateCells <- function(ntcSet, timeFrameOfInterest
 #' @param ntcSet a data frame of our nitrate cells
 #' @returns a data frame with 1 column per type of land, filled out with counts of how many contributing zones were in that type of land
 createLandTypeColumns <- function(ntcSet) {
-  
+  #Remove Cells without contributing zone land uses
   ntcSet <- ntcSet %>%
     filter(ContributingParticleLandUse != "no land use")
   
+  #Constants
+  colNamePrefix <- "CZ_Land_Cover"
+  
+  #Split my space-delimited column into individual rows for each land cover value
   landUseTallyLong <- ntcSet %>%
     separate_longer_delim(ContributingParticleLandUse, delim = " ") %>%
-    mutate(ContributingParticleLandUse = as.numeric(ContributingParticleLandUse)) #TODO t06 - I think switch this to as.character, since these are categories
+    mutate(ContributingParticleLandUse = as.character(ContributingParticleLandUse))
   
-  
+  #Tally up counts of each land cover, turn them into columns, and collapse our rows
   landUseTallyWide <- landUseTallyLong %>%
     group_by(PLSS, ContributingParticleLandUse) %>%
     tally() %>%
-    pivot_wider(names_from = ContributingParticleLandUse, values_from = n, names_prefix = "Land_Use_", values_fill = 0)
+    pivot_wider(names_from = ContributingParticleLandUse, values_from = n, names_prefix = colNamePrefix, values_fill = 0)
 
+  #Merge our talied up land use counts back into our original data set
   ntcSet <- ntcSet %>%
     left_join(landUseTallyWide, by = "PLSS")
   
+  #Add a column that tallies the land cover count for the row
   ntcSet <- ntcSet %>%
-    mutate(Total_Contrib_Zones = rowSums(across(9:47), na.rm = TRUE)) #This is not robust and will break if columns change sequence.
+    mutate(Total_CZ_Land_Cover = rowSums(across(starts_with(colNamePrefix)), na.rm = TRUE))
+  
+  #Get the fractional land cover for each type
+  ntcSet <- ntcSet %>%
+    mutate(across(starts_with(colNamePrefix), ~ .x / Total_CZ_Land_Cover))
   
   return(ntcSet)
 }
@@ -158,8 +167,16 @@ getNitrateCellsMLR <- function(ntcSet) {
   return(summary(regression))
 }
 
-#' Perform some data analysis using WiscLand data set
-wisclandAnalysis <- function(ntcSet, stpDataSet) {
+#' NEEDS REPAIR - Perform some analysis on contributing zone particles using the wiscland data from the Romano Data set
+#' This is now defunct, as we're just grabbing the wiscland data from the primary source and analyzing that
+#' 
+#' If this is to be used for meaningful analysis, it'll need to be updated to take the LND data set as the wiscland source of truth,
+#' rather than loading in a separate WCL dataset
+#' 
+#' @param ntcSet a data frame of NTCs
+#' @param stpSet a data frame of STPs
+#' 
+wisclandAnalysis <- function(ntcSet, stpSet) {
   #look at wiscland data
   wclDataSet <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/DS002-dataset01/CSGCC_Nitrate_Neonicotinoids.gdb", layer = "CSGCC_AG_Wiscland_Bordner_percent_per_section")
   wclDataSet <- st_transform(wclDataSet, 3070)
@@ -173,7 +190,7 @@ wisclandAnalysis <- function(ntcSet, stpDataSet) {
     dotCount <- scrDots(dotCount)
     contribPartIndexes <- ntcSet[["ContributingParticleRowIndex"]][[nitrateCell]]
     contribPartIndexesList <- strsplit(contribPartIndexes, " ")[[1]] #turn a delimited string into a list of strings
-    contributingParticleList <- stpDataSet[contribPartIndexesList, ]
+    contributingParticleList <- stpSet[contribPartIndexesList, ]
     
     wisclandStartingCellList <- st_within(contributingParticleList, wclDataSet)
     
@@ -237,6 +254,7 @@ mergeLNDInfo <- function(ntcSet, lndSet) {
   colPrefix <- "NTC_Land_Cover_"
   ntcCount <- nrow(ntcSet)
   totalCellsTracker <- numeric(ntcCount)
+  dotCount <- 0
   
   #Create a matrix to keep track of our counts
   activeCat(lndSet) <- 7 #for this raster, category 7 is our cls_desc_3 column
@@ -249,6 +267,7 @@ mergeLNDInfo <- function(ntcSet, lndSet) {
   
   #Get to work counting
   for (ntcIndex in 1:ntcCount) {
+    dotCount <- scrDots(dotCount)
     ntcID <- st_geometry(ntcSet[ntcIndex, ])
     croppedLandCover <- crop(lndSet, ntcID) #crop the land cover raster to the extent of the polygon for performance
     maskedLandCover <- mask(croppedLandCover, vect(ntcID)) #get the raster cells inside the polygon
@@ -265,7 +284,7 @@ mergeLNDInfo <- function(ntcSet, lndSet) {
     }
   }
   
-  lndFractions <- cbind(lndFractions, NTC_Land_Cover_Total_Cells = totalCellsTracker) #TODO - figure out if there's a way to create the column name with colNamePrefix
+  lndFractions <- cbind(lndFractions, Total_NTC_Land_Cover = totalCellsTracker)
   
   #convert matrix to data frame, bind it to our NTC info, and return
   lndFractions <- as.data.frame(lndFractions)
@@ -313,7 +332,7 @@ mainNitrateCorrelator <- function(){
   # ----2.6 Output to the user----
   #probably just a call to a function that print stuff and makes some plots
   
-  #Summary from WiscLand data set
+  #Summary from Romano's WiscLand data
   wisclandSummary <- wisclandAnalysis(ntcSampleSet, stpDataSet)
   
   
