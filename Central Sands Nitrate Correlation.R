@@ -238,8 +238,8 @@ wisclandAnalysis <- function(ntcSet, stpSet) {
 #' Objects from this data set will be abbreviated as LND objects
 #' @returns a raster data set
 getLndDataSet <- function() {
-  #lndDataSet <- rast("//ad.wisc.edu/wgnhs/GIS_Library/library/State/Landcover/wiscland2/wiscland2_dataset/level3/wiscland2_level3.tif") #WISCLAND
-  lndDataSet <- rast("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/GIS/CropScapeData/CDL_2022_20231127143930_554525100.tif")
+  lndDataSet <- rast("//ad.wisc.edu/wgnhs/GIS_Library/library/State/Landcover/wiscland2/wiscland2_dataset/level3/wiscland2_level3.tif") #WISCLAND
+  #lndDataSet <- rast("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/GIS/CropScapeData/CDL_2022_20231127143930_554525100.tif")
   lndDataSet <- project(lndDataSet, "EPSG:3070")
   return(lndDataSet)
 }
@@ -261,8 +261,9 @@ mergeLNDInfo <- function(ntcSet, lndSet, activeRasterCat) {
   
   #Create a matrix to keep track of our counts
   activeCat(lndSet) <- activeRasterCat
+  activeCatName <- names(lndSet)
   lndCategories <- levels(lndSet)
-  lndCatNames <- unlist(lapply(lndCategories, function(x) x$cls_desc_3)) #pull out category names from cls_desc_3
+  lndCatNames <- unlist(lapply(lndCategories, function(x) x[[activeCatName]])) #TODO - pull out category names from cls_desc_3
   lndCatNames <- paste0(colPrefix,lndCatNames)
   lndCatNameCount <- length(lndCatNames) #determine our number of columns
   lndFractions <- matrix(0, nrow = ntcCount, ncol = lndCatNameCount, dimnames = list(NULL, lndCatNames)) #create our matrix
@@ -376,7 +377,7 @@ mainNitrateCorrelator <- function(){
   floDataSet <- getFloDataSet()
   stpDataSet <- getStpDataSet()
   lndDataSet <- getLndDataSet()
-  activeRasterCat <- 4
+  activeRasterCat <- 7
   ntcDataSet <- getNtcDataSet()
   set.seed(19058) #control our slice sample call for reproducibility
   ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
