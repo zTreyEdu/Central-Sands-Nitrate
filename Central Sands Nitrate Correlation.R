@@ -295,16 +295,73 @@ mergeLNDInfo <- function(ntcSet, lndSet) {
 
 #'Just a tag to keep my experimental and testing plots
 dataExplorer <- function(ntcSet) {
-  hist(ntcSet$Land_Use_1)
-  with(ntcSet, hist(log(Land_Use_1)))
+  #Plot Data
+  hist(ntcSet$MEDIAN_Nitrate_mg_L_0)
+  with(ntcSet, hist(log10(MEDIAN_Nitrate_mg_L_0 + 0.01)))
   
-  plot(ntcSet$Land_Use_1, log(ntcSet$MEAN_Nitrate_mg_L_0))
-  regression <- lm(ntcSet$LogMean ~ ntcSet$Land_Use_1)
+  #print some stuff on a map to help me out
+  ggplot(data = ntcSet) +
+    geom_sf(aes(fill = `MEAN_Nitrate_mg_L_0`)) +
+    scale_fill_viridis_c() +
+    theme_minimal() +
+    labs(fill = "Nitrate Levels")
+  
+  #Let's get frequency counts of stuff
+  ntcNoGeom <- st_drop_geometry(ntcSet)
+  write.csv(ntcNoGeom, "ntcSet.csv")
+  
+  rowTotals <- ntcNoGeom$Total_NTC_Land_Cover
+  weightedSums <- sapply(ntcNoGeom[,14:48], function(rowFraction) sum(rowFraction * rowTotals)) #TODO this doesn't pull dynamically ;we store fractional amounts, so find the actual counts
+  plot(weightedSums)
+  
+  
+  #Linear Regression for Nitrate Cell Land Cover
+  predictorVars <- ntcNoGeom %>%
+    select(NTC_Land_Cover_Continuous.Corn, NTC_Land_Cover_Potato.Vegetable)
+  
+  outcomeVars <- (ntcSet$MEAN_Nitrate_mg_L_0)
+  outcomeVars <- st_drop_geometry(outcomeVars) #extract only the variable, uncoupling this from SF info
+  
+  #Set my Plots to display in a grid
+  par(mfrow = c(2,2))
+  
+  plot(predictorVars, outcomeVars,
+       main = "Land Cover vs. Nitrate")
+  regression <- lm(outcomeVars ~ ., data = predictorVars)
   summary(regression)
+  residuals <- residuals(regression)
   
-  #looking at number of contributing zones per cell
-  ntcSetSmall <- ntcSet %>%
-    filter(sapply(ContributingParticleLandUse, nchar) < 50)
+  
+  plot(fitted(regression), residuals,
+       xlab = "Prediction", ylab = "Residuals",
+       main = "Residuals vs. Predicted - Cell")
+  abline(h = 0, col = "red")
+
+  #Linear Regression for Contributing Zones Land Cover
+  czPredictors <- ntcNoGeom %>%
+    select(CZ_Land_Cover1, CZ_Land_Cover12, CZ_Land_Cover43)
+  
+  czOutcome <- (ntcNoGeom$MEAN_Nitrate_mg_L_0)
+  plot(czPredictors, czOutcome)
+  czRegression <- lm(czOutcome ~., data = czPredictors)
+  summary(czRegression)
+  czResiduals <- residuals(czRegression)
+  plot(fitted(czRegression), czResiduals,
+       xlab = "Prediction", ylab = "Residuals",
+       main = "Residuals vs. Predicted - Contrb Zone")
+  abline(h = 0, col = "red")
+  
+  #Combined
+  combinedPredictor <- cbind(predictorVars,czPredictors)
+  combinedRegression <- lm(outcomeVars ~ ., data = combinedPredictor)
+  summary(combinedRegression)
+  combinedResiduals <- residuals(combinedRegression)
+  plot(fitted(combinedRegression), combinedResiduals,
+       xlab = "Prediction", ylab = "Residuals",
+       main = "Residuals vs. Predicted - Combined")
+  abline(h = 0, col = "red")
+  
+  
 }
 
 # ----2 Main Callable Tag----
@@ -319,7 +376,8 @@ mainNitrateCorrelator <- function(){
   lndDataSet <- getLndDataSet()
   ntcDataSet <- getNtcDataSet()
   set.seed(19058) #control our slice sample call for reproducibility
-  ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
+  #ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
+  ntcSampleSet <- ntcDataSet
   
   # ----2.2.5 Analyze the cell's land use on nitrate levels----
   ntcSampleSet <- mergeLNDInfo(ntcSampleSet, lndDataSet)
