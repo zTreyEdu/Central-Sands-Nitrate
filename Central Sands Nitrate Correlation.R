@@ -220,32 +220,56 @@ wisclandAnalysis <- function(ntrSet, stpDataSet) {
 #' @returns a raster data set
 getLndDataSet <- function() {
   lndDataSet <- rast("//ad.wisc.edu/wgnhs/GIS_Library/library/State/Landcover/wiscland2/wiscland2_dataset/level3/wiscland2_level3.tif")
+  lndDataSet <- project(lndDataSet, "EPSG:3070")
   return(lndDataSet)
 }
 
-#' Analyzes the impact of a given nitrate cell's land use on it's nitrate levels
+#' Given a set of polygons and a raster, finds the percentage of the raster categories in each polygon
 #' @param ntcSet a dataframe of nitrate cell polygons
 #' @param lndSet a SpatRaster of land cover
-cellLandUseAnalysis <- function(ntcSet, lndSet) {
+#' @returns the ntcSet dataframe with information about how it overlays with the lndSet raster
+mergeLNDInfo <- function(ntcSet, lndSet) {
   #Make sure our CRSs match
   ntcSet <- st_transform(ntcSet, crs(lndSet))
   
+  #Constants and Initialize
+  colPrefix <- "NTC_Land_Cover_"
   ntcCount <- nrow(ntcSet)
-  landCoverFractions <- matrix(0, nrow = ntcCount, ncol = 16) #TODO - have this pull dynamically as a count from levels(lndSet) 
+  totalCellsTracker <- numeric(ntcCount)
+  
+  #Create a matrix to keep track of our counts
+  activeCat(lndSet) <- 7 #for this raster, category 7 is our cls_desc_3 column
+  lndCategories <- levels(lndSet)
+  lndCatNames <- unlist(lapply(lndCategories, function(x) x$cls_desc_3)) #pull out category names from cls_desc_3
+  lndCatNames <- paste0(colPrefix,lndCatNames)
+  lndCatNameCount <- length(lndCatNames) #determine our number of columns
+  lndFractions <- matrix(0, nrow = ntcCount, ncol = lndCatNameCount, dimnames = list(NULL, lndCatNames)) #create our matrix
+  
   
   #Get to work counting
   for (ntcIndex in 1:ntcCount) {
     ntcID <- st_geometry(ntcSet[ntcIndex, ])
     croppedLandCover <- crop(lndSet, ntcID) #crop the land cover raster to the extent of the polygon for performance
     maskedLandCover <- mask(croppedLandCover, vect(ntcID)) #get the raster cells inside the polygon
-    landCoverCounts <- freq(maskedLandCover, useNA = "No")
+    landCoverCounts <- freq(maskedLandCover)
     totalCells <- sum(landCoverCounts$count)
     
-    for (landCoverType in landCoverCounts$value) {
-      landCoverFractions[ntcIndex, landCoverType] <- landCoverCounts$count[landCoverCounts$value == landCoverType] / totalCells
+    #store total cells so we can add them back in later
+    totalCellsTracker[ntcIndex] <- totalCells
+    
+    for (lndCat in landCoverCounts$value) {
+      lndColName <- paste0(colPrefix, lndCat)
+      lndCatCount <- landCoverCounts$count[landCoverCounts$value == lndCat]
+      lndFractions[ntcIndex, lndColName] <- (lndCatCount / totalCells)
     }
   }
   
+  lndFractions <- cbind(lndFractions, NTC_Land_Cover_Total_Cells = totalCellsTracker) #TODO - figure out if there's a way to create the column name with colNamePrefix
+  
+  #convert matrix to data frame, bind it to our NTC info, and return
+  lndFractions <- as.data.frame(lndFractions)
+  ntcSet <- cbind(ntcSet, lndFractions)
+  return(ntcSet)    
 }
 
 #'Just a tag to keep my experimental and testing plots
@@ -269,14 +293,15 @@ mainNitrateCorrelator <- function(){
   timeFrameOfInterest <- getTimeFrameOfInterest()
   
   # ----2.2 Read in datafiles----
-  floDataSet <- getFloDataSet() #change to floDataSet
+  floDataSet <- getFloDataSet()
   stpDataSet <- getStpDataSet()
   lndDataSet <- getLndDataSet()
   ntcDataSet <- getNtcDataSet()
+  set.seed(19058) #control our slice sample call for reproducibility
   ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
   
   # ----2.2.5 Analyze the cell's land use on nitrate levels----
-  cellLandUseRegression <- cellLandUseAnalysis(ntcSampleSet, lndDataSet)
+  ntcSampleSet <- mergeLNDInfo(ntcSampleSet, lndDataSet)
   
   # ----2.3 Find contributing points for our Nitrate Cells----
   ntcSampleSet <- getContributingPointsInfoForNitrateCells(ntcSampleSet,timeFrameOfInterest,floDataSet,stpDataSet)
