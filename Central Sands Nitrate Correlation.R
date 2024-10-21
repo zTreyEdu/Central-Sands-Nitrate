@@ -170,6 +170,7 @@ getNitrateCellsMLR <- function(ntcSet) {
 #' NEEDS REPAIR - Perform some analysis on contributing zone particles using the wiscland data from the Romano Data set
 #' This is now defunct, as we're just grabbing the wiscland data from the primary source and analyzing that
 #' 
+#' 
 #' If this is to be used for meaningful analysis, it'll need to be updated to take the LND data set as the wiscland source of truth,
 #' rather than loading in a separate WCL dataset
 #' 
@@ -333,27 +334,15 @@ mainNitrateCorrelator <- function(){
   #probably just a call to a function that print stuff and makes some plots
   
   #Summary from Romano's WiscLand data
-  wisclandSummary <- wisclandAnalysis(ntcSampleSet, stpDataSet)
+  #wisclandSummary <- wisclandAnalysis(ntcSampleSet, stpDataSet)
   
-  
-  #Summary for selected land use
-  ntcSampleSet <- ntcSampleSet %>%
-    mutate(LogMean = if_else(MEAN_Nitrate_mg_L_0 != 0, log(MEAN_Nitrate_mg_L_0), 0))
-  
-  ntcSampleSet <- ntcSampleSet %>%
-    mutate(percentCorn = (Land_Use_1/Total_Contrib_Zones), percentSweetCorn=(Land_Use_12/Total_Contrib_Zones), percentPotato = (Land_Use_43/Total_Contrib_Zones))
 
-  nitratePlot <- plot((ntcSampleSet$percentPotato + ntcSampleSet$percentCorn + ntcSampleSet$percentSweetCorn), ntcSampleSet$MEAN_Nitrate_mg_L_0,
-                      xlab = "Fraction of High Ag Contributing Zones (Corn + Sweet Corn + Potato)",
-                      ylab = "Mean Nitrate (mg/L)",
-                      main = "Nitrate vs. Land Use in Contributing Zones")
-  nitrateRegression <- lm((ntcSampleSet$MEAN_Nitrate_mg_L_0) ~ ntcSampleSet$percentPotato + ntcSampleSet$percentCorn + ntcSampleSet$percentSweetCorn)
-  summary(nitrateRegression)
-  print(nitratePlot)
-  nitrateCellsMLR <- getNitrateCellsMLR(ntcSampleSet)
-  print(nitrateCellsMLR)
-  
   # ----2.6.1 tag for exploratory Data Analysis----
   dataExplorer(ntcSampleSet)
+  
+  # ----2.6.2 Summary for selected land use----
+  
+  nitrateCellsMLR <- getNitrateCellsMLR(ntcSampleSet)
+  print(nitrateCellsMLR)
   
 }
