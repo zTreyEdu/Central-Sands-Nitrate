@@ -4,9 +4,7 @@
 #TODO
 #t02 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
 #t03 - this real slow. run profvis to check slowsteps (it's likely my for loops). Also see if t02 would help
-#t04 - figure out how to properly use source() so that i can run this from anywhere (VPN or otherwise). I think i'd also need to extend that to anything reading from a file
 #t05 - add handling for log(0), which is currently preventing LM from running 
-#t06 - make a swap to as.character()
 
 # -------------------Code begins here -----------------------
 
@@ -183,9 +181,9 @@ wisclandAnalysis <- function(ntcSet, stpSet) {
   wclDataSet <- st_transform(wclDataSet, 3070)
   dotCount <- 0
   
-  ntcSet[["Wiscland_Area km2"]] <- 0
-  ntcSet[["Wiscland_Ag km2"]] <- 0
-  ntcSet[["Wiscland_Missing_Count"]] <- 0
+  ntcSet[["Wiscland_CZ_Area_km2"]] <- 0 #the total area from all of the contributing zones
+  ntcSet[["Wiscland_CZ_Ag_km2"]] <- 0 #the area from all of the contributing zones that's agricultural land
+  ntcSet[["Wiscland_CZ_Missing_Count"]] <- 0 #the count of scenarios where our starting point isn't in a wiscland cell. We won't be able to factor the land cover for these points into our fractions, so we'll just keep track of how many there are.
   
   for (nitrateCell in 1:nrow(ntcSet)) { 
     dotCount <- scrDots(dotCount)
@@ -212,24 +210,24 @@ wisclandAnalysis <- function(ntcSet, stpSet) {
       }
       
       particleArea <- wclDataSet[["Area_total_km2"]][[wisclandStartingCell]]
-      particlePercentAg <- wclDataSet[["Perc_AG_WISCLAND"]][[wisclandStartingCell]] #ztrey left off here. I might need to grab wisclandStargingCell[[1]]. Also, ContribPartIndex is still a vector? Not sure if that's related
-      particleAg <- (particlePercentAg/100 * particleArea) #TODO  it looks like particlePercentAg and particleAg are swapped? Confirm that
+      particlePercentAg <- wclDataSet[["Perc_AG_WISCLAND"]][[wisclandStartingCell]]
+      particleAg <- (particlePercentAg/100 * particleArea)
       
       contribZoneArea <- (contribZoneArea + particleArea)
       contribZoneAg <- (contribZoneAg + particleAg)
     }
     
-    ntcSet[["Wiscland_Area km2"]][[nitrateCell]] <- contribZoneArea
-    ntcSet[["Wiscland_Ag km2"]][[nitrateCell]] <- contribZoneAg
-    ntcSet[["Wiscland_Missing_Count"]][[nitrateCell]] <- contribZoneMissing
+    ntcSet[["Wiscland_CZ_Area_km2"]][[nitrateCell]] <- contribZoneArea
+    ntcSet[["Wiscland_CZ_Ag_km2"]][[nitrateCell]] <- contribZoneAg
+    ntcSet[["Wiscland_CZ_Missing_Count"]][[nitrateCell]] <- contribZoneMissing
     
   }
   
   ntcSet <- ntcSet %>%
-    mutate("Wiscland_Ag_percent" = (`Wiscland_Ag km2`/`Wiscland_Area km2`))
+    mutate("Wiscland_CZ_Ag_percent" = (`Wiscland_CZ_Ag_km2`/`Wiscland_CZ_Area_km2`))
   
-  wisclandPlot <- plot(ntcSet$Wiscland_Ag_percent, log(ntcSet$MEAN_Nitrate_mg_L_0 + 1)) #add 1 to avoid log(0)
-  wisclandPlotSummary <- lm(log(ntcSet$MEAN_Nitrate_mg_L_0 +1) ~ ntcSet$Wiscland_Ag_percent) #add 1 to avoid log(0)
+  wisclandPlot <- plot(ntcSet$Wiscland_CZ_Ag_percent, log(ntcSet$MEAN_Nitrate_mg_L_0 + 1)) #add 1 to avoid log(0)
+  wisclandPlotSummary <- lm(log(ntcSet$MEAN_Nitrate_mg_L_0 +1) ~ ntcSet$Wiscland_CZ_Ag_percent) #add 1 to avoid log(0)
   summary(wisclandPlotSummary)
   return(summary(wisclandPlotSummary))
 }
@@ -311,7 +309,6 @@ dataExplorer <- function(ntcSet) {
   
   #Let's get frequency counts of stuff
   ntcNoGeom <- st_drop_geometry(ntcSet)
-  write.csv(ntcNoGeom, "ntcSet.csv")
   
   rowTotals <- ntcNoGeom$Total_NTC_Land_Cover
   weightedSums <- sapply(ntcNoGeom[,14:48], function(rowFraction) sum(rowFraction * rowTotals)) #TODO this doesn't pull dynamically ;we store fractional amounts, so find the actual counts
@@ -355,8 +352,10 @@ dataExplorer <- function(ntcSet) {
   abline(h = 0, col = "red")
   
   #Combined
-  combinedPredictor <- cbind(predictorVars,czPredictors)
-  combinedRegression <- lm(outcomeVars ~ ., data = combinedPredictor)
+  combinedPredictor <- ntcNoGeom %>%
+    select(matches("NTC_Land_Cover_"))
+  combinedOutcome <- (ntcNoGeom$MEAN_Nitrate_mg_L_0)
+  combinedRegression <- lm(combinedOutcome ~ ., data = combinedPredictor)
   summary(combinedRegression)
   combinedResiduals <- residuals(combinedRegression)
   plot(fitted(combinedRegression), combinedResiduals,
@@ -396,7 +395,7 @@ mainNitrateCorrelator <- function(){
   #probably just a call to a function that print stuff and makes some plots
   
   #Summary from Romano's WiscLand data
-  #wisclandSummary <- wisclandAnalysis(ntcSampleSet, stpDataSet)
+  wisclandSummary <- wisclandAnalysis(ntcSampleSet, stpDataSet)
   
 
   # ----2.6.1 tag for exploratory Data Analysis----
