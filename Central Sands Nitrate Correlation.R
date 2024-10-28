@@ -3,8 +3,6 @@
 
 #TODO
 #t02 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
-#t03 - this real slow. run profvis to check slowsteps (it's likely my for loops). Also see if t02 would help
-#t05 - add handling for log(0), which is currently preventing LM from running 
 
 # -------------------Code begins here -----------------------
 
