@@ -156,15 +156,6 @@ createLandTypeColumns <- function(ntcSet) {
   return(ntcSet)
 }
 
-#' Do a multiple linear regression on variables of interest
-#' @param ntcSet a data frame of our nitrate cells
-#' @returns a summary of the regression analysis
-getNitrateCellsMLR <- function(ntcSet) {
-  regression <- lm(ntcSet$MEAN_Nitrate_mg_L_0 ~ ntcSet$Land_Use_12)
-  #regression <- lm(ntcSet$LogMean ~ ntcSet$Land_Use_12)
-  return(summary(regression))
-}
-
 #' NEEDS REPAIR - Perform some analysis on contributing zone particles using the wiscland data from the Romano Data set
 #' This is now defunct, as we're just grabbing the wiscland data from the primary source and analyzing that
 #' 
@@ -402,8 +393,6 @@ mainNitrateCorrelator <- function(){
   dataExplorer(ntcSampleSet)
   
   # ----2.6.2 Summary for selected land use----
-  
-  nitrateCellsMLR <- getNitrateCellsMLR(ntcSampleSet)
-  print(nitrateCellsMLR)
+
   
 }
