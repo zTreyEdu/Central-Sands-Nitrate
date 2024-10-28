@@ -293,7 +293,8 @@ createSumColumn <- function(ntcSet,columnNames,sumColumnName) {
 }
 
 
-#'Just a tag to keep my experimental and testing plots
+#' A tag to house different plots and graphs
+#' @param ntcSet a dataframe with nitrate info to analyze
 dataExplorer <- function(ntcSet) {
   #1---Data Plots----
   hist(ntcSet$MEDIAN_Nitrate_mg_L_0)
@@ -310,65 +311,112 @@ dataExplorer <- function(ntcSet) {
   ntcNoGeom <- st_drop_geometry(ntcSet)
   
   #2----Data Manipulations for Analysis
-  rowTotals <- ntcNoGeom$Total_NTC_Land_Cover
-  weightedSums <- sapply(ntcNoGeom[,14:48], function(rowFraction) sum(rowFraction * rowTotals)) #TODO this doesn't pull dynamically ;we store fractional amounts, so find the actual counts
-  plot(weightedSums)
-  
-  nitrateAdderColumns <- c("NTC_Land_Cover_Continuous.Corn", "NTC_Land_Cover_Potato.Vegetable")
-  nitrateSumColumnName <- "NTC_Nitrate_Adders"
-  ntcNoGeom <- createSumColumn(ntcNoGeom, nitrateAdderColumns, nitrateSumColumnName)
-  nitrateRemovers
-  nitrateNeutral
-  
+  plot(ntcNoGeom$Total_NTC_Land_Cover)
   
   #3----Linear Regression for Nitrate Cell Land Cover----
-  predictorVars <- ntcNoGeom %>%
-    select(NTC_Land_Cover_Continuous.Corn, NTC_Land_Cover_Potato.Vegetable)
+  #Nitrate Adders
+  ntcNitrateAdderColumns <- c("NTC_Land_Cover_Potato.Vegetable",
+                              "NTC_Land_Cover_Continuous.Corn")
+  ntcNitrateAdderSumColumnName <- "NTC_Nitrate_Adders"
+  ntcNoGeom <- createSumColumn(ntcNoGeom, ntcNitrateAdderColumns, ntcNitrateAdderSumColumnName)
   
-  outcomeVars <- (ntcSet$MEAN_Nitrate_mg_L_0)
-  outcomeVars <- st_drop_geometry(outcomeVars) #extract only the variable, uncoupling this from SF info
+  #Nitrate Removers
+  ntcNitrateRemoverColumns <- c("NTC_Land_Cover_Oak", 
+                                "NTC_Land_Cover_Pine",
+                                "NTC_Land_Cover_Aspen.Paper.Birch.Forest",
+                                "NTC_Land_Cover_Fir.Spruce",
+                                "NTC_Land_Cover_Red.Maple",
+                                "NTC_Land_Cover_Northern.Hardwoods",
+                                "NTC_Land_Cover_Mixed.Deciduous.Coniferous.Forest",
+                                "NTC_Land_Cover_Hemlock.Hardwoods",
+                                "NTC_Land_Cover_Central.Hardwoods",
+                                "NTC_Land_Cover_Broad.leaved.Deciduous.Wetland.Shrub",
+                                "NTC_Land_Cover_Broad.leaved.Evergreen.Wetland.Shrub",
+                                "NTC_Land_Cover_Mixed.Deciduous.Coniferous.Forested.Wetland",
+                                "NTC_Land_Cover_Coniferous.Forested.Wetland",
+                                "NTC_Land_Cover_Needle.leaved.Wetland.Shrub",
+                                "NTC_Land_Cover_Aspen.Forested.Wetland")
+  ntcNitrateRemoverSumColumnName <- "NTC_Nitrate_Removers"
+  ntcNoGeom <- createSumColumn(ntcNoGeom, ntcNitrateRemoverColumns, ntcNitrateRemoverSumColumnName)
   
-  #Set my Plots to display in a grid
-  par(mfrow = c(2,2))
+  ntcModel <- lm(ntcNoGeom$MEAN_Nitrate_mg_L_0 ~ ntcNoGeom$NTC_Nitrate_Adders + ntcNoGeom$NTC_Nitrate_Removers)
+  summary(ntcModel)
+  ntcResiduals <- residuals(ntcModel)
   
-  plot(predictorVars, outcomeVars,
-       main = "Land Cover vs. Nitrate")
-  regression <- lm(outcomeVars ~ ., data = predictorVars)
-  summary(regression)
-  residuals <- residuals(regression)
-  
-  
-  plot(fitted(regression), residuals,
+  plot(fitted(ntcModel), ntcResiduals,
        xlab = "Prediction", ylab = "Residuals",
        main = "Residuals vs. Predicted - Cell")
   abline(h = 0, col = "red")
 
   #Linear Regression for Contributing Zones Land Cover
-  czPredictors <- ntcNoGeom %>%
-    select(CZ_Land_Cover_1, CZ_Land_Cover_12, CZ_Land_Cover_43)
+  #Nitrate Adders
+  czNitrateAdderColumns <- c("CZ_Land_Cover_1",
+                           "CZ_Land_Cover_43",
+                           "CZ_Land_Cover_12")
+  czNitrateAdderSumColumnName <- "CZ_Nitrate_Adders"
+  ntcNoGeom <- createSumColumn(ntcNoGeom, czNitrateAdderColumns, czNitrateAdderSumColumnName)
   
-  czOutcome <- (ntcNoGeom$MEAN_Nitrate_mg_L_0)
-  plot(czPredictors, czOutcome)
-  czRegression <- lm(czOutcome ~., data = czPredictors)
+  #Nitrate Removers
+  czNitrateRemoverColumns <- c("CZ_Land_Cover_141",
+                               "CZ_Land_Cover_142",
+                               "CZ_Land_Cover_143",
+                               "CZ_Land_Cover_190",
+                               "CZ_Land_Cover_195")
+  czNitrateRemoverSumColumnName <- "CZ_Nitrate_Removers"
+  ntcNoGeom <- createSumColumn(ntcNoGeom, czNitrateRemoverColumns, czNitrateRemoverSumColumnName)
+
+  
+  czRegression <- lm(ntcNoGeom$MEAN_Nitrate_mg_L_0 ~ ntcNoGeom$CZ_Nitrate_Adders + ntcNoGeom$CZ_Nitrate_Removers)
   summary(czRegression)
   czResiduals <- residuals(czRegression)
+  
   plot(fitted(czRegression), czResiduals,
        xlab = "Prediction", ylab = "Residuals",
-       main = "Residuals vs. Predicted - Contrb Zone")
+       main = "Residuals vs. Predicted - Contrib Zone")
   abline(h = 0, col = "red")
   
   #Combined
-  combinedPredictor <- ntcNoGeom %>%
-    select(matches("NTC_Land_Cover_"))
-  combinedOutcome <- (ntcNoGeom$MEAN_Nitrate_mg_L_0)
-  combinedRegression <- lm(combinedOutcome ~ ., data = combinedPredictor)
+  #Nitrate Adders
+  combinedNitrateAdderColumns <- c("NTC_Land_Cover_Potato.Vegetable",
+                           "NTC_Land_Cover_Continuous.Corn",
+                           "NTC_Land_Cover_Dairy.Rotation",
+                           "CZ_Land_Cover_1",
+                           "CZ_Land_Cover_43",
+                           "CZ_Land_Cover_12")
+  combinedNitrateAdderSumColumnName <- "Combined_Nitrate_Adders"
+  ntcNoGeom <- createSumColumn(ntcNoGeom, combinedNitrateAdderColumns, combinedNitrateAdderSumColumnName)
+  
+  #Nitrate Removers
+  combinedNitrateRemoverColumns <- c("NTC_Land_Cover_Oak", 
+                                "NTC_Land_Cover_Pine",
+                                "NTC_Land_Cover_Aspen.Paper.Birch.Forest",
+                                "NTC_Land_Cover_Fir.Spruce",
+                                "NTC_Land_Cover_Red.Maple",
+                                "NTC_Land_Cover_Northern.Hardwoods",
+                                "NTC_Land_Cover_Mixed.Deciduous.Coniferous.Forest",
+                                "NTC_Land_Cover_Hemlock.Hardwoods",
+                                "NTC_Land_Cover_Central.Hardwoods",
+                                "NTC_Land_Cover_Broad.leaved.Deciduous.Wetland.Shrub",
+                                "NTC_Land_Cover_Broad.leaved.Evergreen.Wetland.Shrub",
+                                "NTC_Land_Cover_Mixed.Deciduous.Coniferous.Forested.Wetland",
+                                "NTC_Land_Cover_Coniferous.Forested.Wetland",
+                                "NTC_Land_Cover_Needle.leaved.Wetland.Shrub",
+                                "NTC_Land_Cover_Aspen.Forested.Wetland",
+                                "NTC_Land_Cover_Cash.Grain",
+                                "CZ_Land_Cover_141",
+                                "CZ_Land_Cover_142",
+                                "CZ_Land_Cover_143",
+                                "CZ_Land_Cover_190",
+                                "CZ_Land_Cover_195")
+  combinedNitrateRemoverSumColumnName <- "Combined_Nitrate_Removers"
+  ntcNoGeom <- createSumColumn(ntcNoGeom, combinedNitrateRemoverColumns, combinedNitrateRemoverSumColumnName)
+  combinedRegression <- lm(ntcNoGeom$MEAN_Nitrate_mg_L_0 ~ ntcNoGeom$Combined_Nitrate_Adders + ntcNoGeom$Combined_Nitrate_Removers)
   summary(combinedRegression)
   combinedResiduals <- residuals(combinedRegression)
   plot(fitted(combinedRegression), combinedResiduals,
        xlab = "Prediction", ylab = "Residuals",
        main = "Residuals vs. Predicted - Combined")
   abline(h = 0, col = "red")
-  
   
 }
 
@@ -385,8 +433,8 @@ mainNitrateCorrelator <- function(){
   activeRasterCat <- 7
   ntcDataSet <- getNtcDataSet()
   set.seed(19058) #control our slice sample call for reproducibility
-  ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
-  #ntcSampleSet <- ntcDataSet
+  #ntcSampleSet <- slice_sample(ntcDataSet, n = 500)
+  ntcSampleSet <- ntcDataSet
   
   # ----2.2.5 Analyze the cell's land use on nitrate levels----
   ntcSampleSet <- mergeLNDInfo(ntcSampleSet, lndDataSet, activeRasterCat)
