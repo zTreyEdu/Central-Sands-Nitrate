@@ -6,7 +6,7 @@ dashboardPage(
   dashboardSidebar(disable = TRUE),
   dashboardBody(
     box(width = 6,
-        p("click or drag the marker withint the bounded region to get nitrate estimates"),
+        p("Click or drag the marker within the bounded region to get nitrate estimates"),
         leafletOutput(outputId = "map")
         ),
     box(width = 6,
