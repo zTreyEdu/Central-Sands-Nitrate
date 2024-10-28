@@ -83,6 +83,7 @@ getCoordBufferZone <- function(coordsOfInterest, buffer) {
 }
 
 #' Gets our modpath flowlines by reading them in from their shapefiles
+#' Objects from this data set will b abbreviated as FLO objects
 #' source_file and conversion_to_partiloc_ are added so we can correctly match up IDs later on.
 #' (the fortran code used to generate the flowlines had to be run several times and could not directly create unique IDs, hence the conversions)
 #' (the specific numbers used have are a consequence of how the original ID genreation code was written)
@@ -105,10 +106,11 @@ getFloDataSet <- function() {
   return(floDataSet)
 }
 #' Gets our modpath starting points by reading them from their shapefile
+#' Objects from this data set will be abbreviated as STP objects
 #' @returns a data frame with our modpath starting points
-getAllModpathStartingPoints <- function() {
-  allModpathStartingPoints <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
-  return(allModpathStartingPoints)
+getStpDataSet <- function() {
+  stpDataSet <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp")
+  return(stpDataSet)
 }
 
 #' Finds the flow lines that intersect with our buffer zone
@@ -144,10 +146,10 @@ getContributingPointsForCoord <- function(coordsOfInterest, buffer, timeFrameOfI
 
 #' Display the x,y coordinates for a given set of particles in the contributing zone
 #' @param contributingPoints a dataframe of particle IDs whose coordinates we want to display
-#' @param allModpathStartingPoints the list of starting points from our modpath model
-displayCoordsForContribPoints <- function(allModpathStartingPoints, contributingPoints) {
+#' @param stpDataSet the list of starting points from our modpath model
+displayCoordsForContribPoints <- function(stpDataSet, contributingPoints) {
   foreignKey <- c("partidloc_" = "partidloc_")
-  coordsForContribPoints <- allModpathStartingPoints %>%
+  coordsForContribPoints <- stpDataSet %>%
     inner_join(contributingPoints, by = foreignKey) %>%
     dplyr::select(partidloc_, x, y) #using package::function notation as 'select' is a common name
   print(coordsForContribPoints) #t12 - Rather than grabbing columns x and y, i think there's somethign special i need to do to grab the coords from the point objects. Because I think the projection won't line up otherwise
@@ -156,12 +158,12 @@ displayCoordsForContribPoints <- function(allModpathStartingPoints, contributing
 
 #' Get the land use mix for our starting points
 #' @param contributingPoints a dataframe of particle IDs
-#' @param allModpathStartingPoints the list of starting points from our modpath model
+#' @param stpDataSet the list of starting points from our modpath model
 #' @param timeFrameOfInterest a time in years
 #' @returns a data frame of land uses
-getLandUseMix <- function(allModpathStartingPoints, contributingPoints, timeFrameOfInterest) {
+getLandUseMix <- function(stpDataSet, contributingPoints, timeFrameOfInterest) {
   foreignKey <- c("partidloc_" = "partidloc_")
-  landUseMix <- allModpathStartingPoints %>%
+  landUseMix <- stpDataSet %>%
     inner_join(contributingPoints, by = foreignKey) %>%
     dplyr::select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use; #using package::function notation as 'select' is a common name
   return(landUseMix)
@@ -218,15 +220,15 @@ createPlots <- function(estimatedNitrateLevels) {
 #' @param timeFrameOfInterest the time frame over which we should look
 #' @param buffer the radius of our buffer zone (in meters)
 #' @param floDataSet the flowlines generated from our MODPATH model
-#' @param allModpathStartingPoints the starting points from our MODPATH model
-runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, allModpathStartingPoints) {
+#' @param stpDataSet the starting points from our MODPATH model
+runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
   
   contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
   print(contributingPoints)
-  displayCoordsForContribPoints(allModpathStartingPoints, contributingPoints)
+  displayCoordsForContribPoints(stpDataSet, contributingPoints)
   
   # ----2.4 Find the land use for the contributing points----
-  landUseMix <- getLandUseMix(allModpathStartingPoints, contributingPoints, timeFrameOfInterest)
+  landUseMix <- getLandUseMix(stpDataSet, contributingPoints, timeFrameOfInterest)
   print(landUseMix)
   
   # ----2.5 Find the estimated nitrogen impacts given the land use----
@@ -249,10 +251,10 @@ mainNitrateEstimator <- function() {
   
   # ----2.2 Read in datafiles----
   floDataSet <- getfloDataSet()
-  allModpathStartingPoints <- getAllModpathStartingPoints()
+  stpDataSet <- getStpDataSet()
   
   # ----2.3 Find Nitrate Estimates----
-  estimatedNitrateLevels <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, allModpathStartingPoints)
+  estimatedNitrateLevels <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
   plots <- createPlots(estimatedNitrateLevels)
   print(plots)
   print("placeholder to know we're done")
