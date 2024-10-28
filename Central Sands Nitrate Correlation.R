@@ -146,11 +146,7 @@ createLandTypeColumns <- function(ntcSet) {
   #Add a column that tallies the land cover count for the row
   ntcSet <- ntcSet %>%
     mutate(Total_CZ_Land_Cover = rowSums(across(starts_with(colNamePrefix)), na.rm = TRUE))
-  
-  #Get the fractional land cover for each type
-  ntcSet <- ntcSet %>%
-    mutate(across(starts_with(colNamePrefix), ~ .x / Total_CZ_Land_Cover))
-  
+
   return(ntcSet)
 }
 
@@ -231,7 +227,7 @@ getLndDataSet <- function() {
   return(lndDataSet)
 }
 
-#' Given a set of polygons and a raster, finds the percentage of the raster categories in each polygon
+#' Given a set of polygons and a raster, finds the count of the raster categories in each polygon
 #' @param ntcSet a dataframe of nitrate cell polygons
 #' @param lndSet a SpatRaster of land cover
 #' @param activeRasterCat the active category to use for our raster. Use 7 for WISCLAND2-Level3; use 4 for CropScape
@@ -250,10 +246,10 @@ mergeLNDInfo <- function(ntcSet, lndSet, activeRasterCat) {
   activeCat(lndSet) <- activeRasterCat
   activeCatName <- names(lndSet)
   lndCategories <- levels(lndSet)
-  lndCatNames <- unlist(lapply(lndCategories, function(x) x[[activeCatName]])) #TODO - pull out category names from cls_desc_3
+  lndCatNames <- unlist(lapply(lndCategories, function(x) x[[activeCatName]]))
   lndCatNames <- paste0(colPrefix,lndCatNames)
   lndCatNameCount <- length(lndCatNames) #determine our number of columns
-  lndFractions <- matrix(0, nrow = ntcCount, ncol = lndCatNameCount, dimnames = list(NULL, lndCatNames)) #create our matrix
+  lndCatCounts <- matrix(0, nrow = ntcCount, ncol = lndCatNameCount, dimnames = list(NULL, lndCatNames)) #create a matrix to store the count of each land category for each NTC
   
   
   #Get to work counting
@@ -268,18 +264,19 @@ mergeLNDInfo <- function(ntcSet, lndSet, activeRasterCat) {
     #store total cells so we can add them back in later
     totalCellsTracker[ntcIndex] <- totalCells
     
+    #Get the count of cells for each category
     for (lndCat in landCoverCounts$value) {
       lndColName <- paste0(colPrefix, lndCat)
       lndCatCount <- landCoverCounts$count[landCoverCounts$value == lndCat]
-      lndFractions[ntcIndex, lndColName] <- (lndCatCount / totalCells)
+      lndCatCounts[ntcIndex, lndColName] <- (lndCatCount)
     }
   }
   
-  lndFractions <- cbind(lndFractions, Total_NTC_Land_Cover = totalCellsTracker)
+  lndCatCounts <- cbind(lndCatCounts, Total_NTC_Land_Cover = totalCellsTracker)
   
   #convert matrix to data frame, bind it to our NTC info, and return
-  lndFractions <- as.data.frame(lndFractions)
-  ntcSet <- cbind(ntcSet, lndFractions)
+  lndCatCounts <- as.data.frame(lndCatCounts)
+  ntcSet <- cbind(ntcSet, lndCatCounts)
   return(ntcSet)    
 }
 
