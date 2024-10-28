@@ -14,7 +14,7 @@ coordsOfInterest <- getCoordsOfInterest()
 timeFrameOfInterest <- getTimeFrameOfInterest()
 buffer <- getBuffer()
 floDataSet <- getFloDataSet()
-allModpathStartingPoints <- getAllModpathStartingPoints()
+stpDataSet <- getStpDataSet()
 
 
 #Draw a boundary line for our pathline model
@@ -49,7 +49,7 @@ getRegionData <- function(pathLineBoundary, marker) {
 #' @returns a bar plot of nitrate data
 generateNitrateEstimates <- function(longitude, latitude) {
   selectedCoords <- createSFPoint(longitude, latitude)
-  estimatedNitrateLevels <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, allModpathStartingPoints)
+  estimatedNitrateLevels <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
   nitrateBarPlot <- createPlots(estimatedNitrateLevels)
   return(nitrateBarPlot)
 }
