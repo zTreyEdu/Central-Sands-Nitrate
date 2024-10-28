@@ -126,7 +126,7 @@ createLandTypeColumns <- function(ntcSet) {
     filter(ContributingParticleLandUse != "no land use")
   
   #Constants
-  colNamePrefix <- "CZ_Land_Cover"
+  colNamePrefix <- "CZ_Land_Cover_"
   
   #Split my space-delimited column into individual rows for each land cover value
   landUseTallyLong <- ntcSet %>%
@@ -283,9 +283,22 @@ mergeLNDInfo <- function(ntcSet, lndSet, activeRasterCat) {
   return(ntcSet)    
 }
 
+#'Given an NTC Set, creates a new column that sums up the columns passed in. This will be used to help
+#'group and simplify our analysis later on
+#' @param ntcSet a dataframe of NTCs. Assumes that land use columns are in absolute area, not relative fractions
+#' @param columnNames a list of column names that we'd like to sum
+#' @param sumColumnName the name to give the new column being created
+#' @returns a a dataframe with a single column which is the summed amounts from the columns
+createSumColumn <- function(ntcSet,columnNames,sumColumnName) {
+  ntcSet <- ntcSet %>%
+    mutate(!!sumColumnName := rowSums(across(all_of(columnNames)), na.rm = TRUE)) #the !! and := allow me to use the string stored in sumColumnName to name the column
+  return(ntcSet)
+}
+
+
 #'Just a tag to keep my experimental and testing plots
 dataExplorer <- function(ntcSet) {
-  #Plot Data
+  #1---Data Plots----
   hist(ntcSet$MEDIAN_Nitrate_mg_L_0)
   with(ntcSet, hist(log10(MEDIAN_Nitrate_mg_L_0 + 0.01)))
   
@@ -299,12 +312,19 @@ dataExplorer <- function(ntcSet) {
   #Let's get frequency counts of stuff
   ntcNoGeom <- st_drop_geometry(ntcSet)
   
+  #2----Data Manipulations for Analysis
   rowTotals <- ntcNoGeom$Total_NTC_Land_Cover
   weightedSums <- sapply(ntcNoGeom[,14:48], function(rowFraction) sum(rowFraction * rowTotals)) #TODO this doesn't pull dynamically ;we store fractional amounts, so find the actual counts
   plot(weightedSums)
   
+  nitrateAdderColumns <- c("NTC_Land_Cover_Continuous.Corn", "NTC_Land_Cover_Potato.Vegetable")
+  nitrateSumColumnName <- "NTC_Nitrate_Adders"
+  ntcNoGeom <- createSumColumn(ntcNoGeom, nitrateAdderColumns, nitrateSumColumnName)
+  nitrateRemovers
+  nitrateNeutral
   
-  #Linear Regression for Nitrate Cell Land Cover
+  
+  #3----Linear Regression for Nitrate Cell Land Cover----
   predictorVars <- ntcNoGeom %>%
     select(NTC_Land_Cover_Continuous.Corn, NTC_Land_Cover_Potato.Vegetable)
   
@@ -328,7 +348,7 @@ dataExplorer <- function(ntcSet) {
 
   #Linear Regression for Contributing Zones Land Cover
   czPredictors <- ntcNoGeom %>%
-    select(CZ_Land_Cover1, CZ_Land_Cover12, CZ_Land_Cover43)
+    select(CZ_Land_Cover_1, CZ_Land_Cover_12, CZ_Land_Cover_43)
   
   czOutcome <- (ntcNoGeom$MEAN_Nitrate_mg_L_0)
   plot(czPredictors, czOutcome)
