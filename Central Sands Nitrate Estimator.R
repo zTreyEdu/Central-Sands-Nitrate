@@ -221,8 +221,11 @@ createPlots <- function(estimatedNitrateLevels) {
 #' @param buffer the radius of our buffer zone (in meters)
 #' @param floDataSet the flowlines generated from our MODPATH model
 #' @param stpDataSet the starting points from our MODPATH model
+#' @returns a list with the following structure:
+#'            stpIDs: a data frame of contributing point IDs
+#'            landCover: Land Cover fraction of all of the contributing zones
+#'            Index 3: Estimated nitrate level (Note: not yet added in)
 runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
-  
   contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
   print(contributingPoints)
   displayCoordsForContribPoints(stpDataSet, contributingPoints)
@@ -236,8 +239,9 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   print(estimatedNitrateLevels)
   
   # ----2.6 Output to the user----
-  #probably just a call to a function that print stuff and makes some plots
-  return(estimatedNitrateLevels)
+  returnList <- list(stpIDs = contributingPoints, landCover = estimatedNitrateLevels)
+  
+  return(returnList)
 }
 
 # ----2 Main Tag----
@@ -250,12 +254,12 @@ mainNitrateEstimator <- function() {
   buffer <- getBuffer()
   
   # ----2.2 Read in datafiles----
-  floDataSet <- getfloDataSet()
+  floDataSet <- getFloDataSet()
   stpDataSet <- getStpDataSet()
   
   # ----2.3 Find Nitrate Estimates----
-  estimatedNitrateLevels <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
-  plots <- createPlots(estimatedNitrateLevels)
+  nitrateEstimatorReturnList <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
+  plots <- createPlots(nitrateEstimatorReturnList$landCover)
   print(plots)
   print("placeholder to know we're done")
 }

@@ -49,9 +49,10 @@ getRegionData <- function(pathLineBoundary, marker) {
 #' @returns a bar plot of nitrate data
 generateNitrateEstimates <- function(longitude, latitude) {
   selectedCoords <- createSFPoint(longitude, latitude)
-  estimatedNitrateLevels <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
-  nitrateBarPlot <- createPlots(estimatedNitrateLevels)
-  return(nitrateBarPlot)
+  nitrateEstimatorReturnList <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
+  landCoverBarPlot <- createPlots(nitrateEstimatorReturnList$landCover)
+  nitrateEstimatorReturnList$landCoverBarPlot <- landCoverBarPlot
+  return(nitrateEstimatorReturnList)
 }
   
   

@@ -13,7 +13,7 @@ dashboardPage(
         htmlOutput("text")
         ),
     box(width = 6,
-        plotOutput(outputId = "nitratePlot"))
+        plotOutput(outputId = "landCoverBarPlot"))
     ),
   
   title = "Interactive Nitrate Map"

@@ -39,8 +39,8 @@ function(input, output, session) {
                  options = markerOptions(draggable = TRUE))
     
     #Update our UI with our Nitrate Plot
-    nitrateBarPlot <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
-    output$nitratePlot <- renderPlot({nitrateBarPlot})
+    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
+    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
 
   })
   
@@ -56,8 +56,8 @@ function(input, output, session) {
     current_marker$lng <- input$map_shape_click$lng
     
     #Update our UI with our Nitrate Plot
-    nitrateBarPlot <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
-    output$nitratePlot <- renderPlot({nitrateBarPlot})
+    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
+    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
   })
   
   
