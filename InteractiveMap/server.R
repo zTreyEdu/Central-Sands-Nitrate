@@ -32,25 +32,26 @@ function(input, output, session) {
       current_marker$lng <- input$map_marker_dragend$lng
     }
     
+    #Update our UI with our Nitrate Plot
+    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
+    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
+    stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+
     #Update the map with our new marker locations
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
       addMarkers(data = data.frame(lat = current_marker$lat, lng = current_marker$lng),
-                 options = markerOptions(draggable = TRUE))
-    
-    #Update our UI with our Nitrate Plot
-    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
-    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
+                 options = markerOptions(draggable = TRUE)) %>%
+      addCircleMarkers(data = stpCoords,
+                       lng = ~lng,
+                       lat = ~lat,
+                       color = "blue",
+                       radius = 5)
 
   })
   
   #Alternatively, allow user to click on the map
   observeEvent(input$map_shape_click, {
-    leafletProxy(mapId = "map") %>%
-      clearMarkers() %>%
-      addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
-                 options = markerOptions(draggable = TRUE))
-    
     #Update map marker
     current_marker$lat <- input$map_shape_click$lat
     current_marker$lng <- input$map_shape_click$lng
@@ -58,6 +59,17 @@ function(input, output, session) {
     #Update our UI with our Nitrate Plot
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
     output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
+    stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+    
+    leafletProxy(mapId = "map") %>%
+      clearMarkers() %>%
+      addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
+                 options = markerOptions(draggable = TRUE)) %>%
+      addCircleMarkers(data = stpCoords,
+                       lng = ~lng,
+                       lat = ~lat,
+                       color = "blue",
+                       radius = 5)
   })
   
   

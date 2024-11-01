@@ -54,6 +54,23 @@ generateNitrateEstimates <- function(longitude, latitude) {
   nitrateEstimatorReturnList$landCoverBarPlot <- landCoverBarPlot
   return(nitrateEstimatorReturnList)
 }
+
+#' Given a data frame of our STP IDs (the IDs for our starting points), look up their SF data, and return their coordinates
+#' @param stpIDs a data frame of STP IDs
+#' @returns a matrix of coordinates for our STPs
+getSTPCoords <- function(stpIDs) {
+  #stpIDs is just a list of IDs, not SF objects
+  #We get the actual SF Object from our stpDataSet
+  sfSTPIDs <- stpDataSet %>%
+    filter(partidloc_ %in% stpIDs$partidloc_)
+  sfSTPIDs <- st_transform(sfSTPIDs, crs = 4326)
+  
+  #Now that we have the sf objects, get their coordinates
+  stpCoords <- st_coordinates(sfSTPIDs) %>%
+    as.data.frame() %>%
+    rename(lng = X, lat = Y) #rename columns for the addCircleMarkers call we'll make later on
+  return(stpCoords)
+}
   
   
   
