@@ -117,17 +117,17 @@ getStpDataSet <- function() {
 #' @param coordBufferZone a polygon object for the buffer zone in question 
 #' @param floDataSet linestring objects, flowlines from our modpath model output
 #' @returns a data frame of flowines
-getFlowLinesInBufferZone <- function(coordBufferZone, floDataSet) {
+getFLOsInBufferZone <- function(coordBufferZone, floDataSet) {
   intersections <- st_intersects(coordBufferZone, floDataSet)
-  flowLinesInBufferZone <- floDataSet[intersections[[1]], ]
-  return(flowLinesInBufferZone)
+  flosInBufferZone <- floDataSet[intersections[[1]], ]
+  return(flosInBufferZone)
 }
 
 #' Finds the contributing points of our flow lines
-#' @param flowLinesInBufferZone a dataframe of linestring objects, the flowlines that intersected our buffered region
+#' @param flosInBufferZone a dataframe of linestring objects, the flowlines that intersected our buffered region
 #' @returns a dataframe of particle IDs for the contributing points
-getContributingPointIDsFromFlowlines <- function(flowLinesInBufferZone) {
-  contributingPoints <- data.frame(partidloc_ = flowLinesInBufferZone$conversion_to_partidloc_)
+getContributingPointsFromFLOs <- function(flosInBufferZone) {
+  contributingPoints <- data.frame(partidloc_ = flosInBufferZone$conversion_to_partidloc_)
   return(contributingPoints)
 }
 
@@ -139,8 +139,8 @@ getContributingPointIDsFromFlowlines <- function(flowLinesInBufferZone) {
 #' @returns a data frame of particle IDs
 getContributingPointsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet) {
   coordBufferZone <- getCoordBufferZone(coordsOfInterest, buffer)
-  flowLinesInBufferZone <- getFlowLinesInBufferZone(coordBufferZone,floDataSet)
-  contributingPoints <- getContributingPointIDsFromFlowlines(flowLinesInBufferZone)
+  flosInBufferZone <- getFLOsInBufferZone(coordBufferZone,floDataSet)
+  contributingPoints <- getContributingPointsFromFLOs(flosInBufferZone)
   return(contributingPoints)
 }
 
