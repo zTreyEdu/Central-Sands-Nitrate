@@ -27,7 +27,7 @@ function(input, output, session) {
                       marker = data.frame(lat = input$map_marker_dragend$lat, lng = input$map_marker_dragend$lng))
     
     if(nrow(regionData) == 0) {
-      showNotification("Error: no data for this location", id = "region_error")
+      showNotification("Error: no data for this location", id = "region_error", type = "error")
     } else {
       current_marker$lat <- input$map_marker_dragend$lat
       current_marker$lng <- input$map_marker_dragend$lng
