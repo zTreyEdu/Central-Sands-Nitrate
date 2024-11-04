@@ -10,10 +10,11 @@ dashboardPage(
         leafletOutput(outputId = "map")
         ),
     box(width = 6,
-        htmlOutput("text")
+        htmlOutput("coordInfo")
         ),
     box(width = 6,
-        plotOutput(outputId = "landCoverBarPlot"))
+        plotOutput(outputId = "landCoverBarPlot")
+        )
     ),
   
   title = "Interactive Nitrate Map"

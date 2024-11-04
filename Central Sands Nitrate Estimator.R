@@ -31,7 +31,6 @@ library(dplyr)
 
 # ----1 Define Functions----
 #' Create an SF Point Object from a pair of coordinates
-#'
 #' @param xCoord numeric, an x coordinate
 #' @param yCoord numeric, a y coordinate
 #' @returns an SF Point Object using CRS 3070

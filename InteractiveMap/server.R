@@ -14,6 +14,7 @@ function(input, output, session) {
       addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE)) #create a moveable map marker
   })
   
+  #Set up our reactive values----
   current_marker <- reactiveValues(
     lng = -89.518247,
     lat = 44.210243
@@ -31,12 +32,6 @@ function(input, output, session) {
       current_marker$lat <- input$map_marker_dragend$lat
       current_marker$lng <- input$map_marker_dragend$lng
     }
-    
-    #Update our UI with our Nitrate Plot
-    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
-    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
-    stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
-    projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
 
     #Update the map with our new marker locations
     leafletProxy(mapId = "map") %>%
@@ -45,7 +40,18 @@ function(input, output, session) {
       addMarkers(data = data.frame(lat = current_marker$lat, lng = current_marker$lng),
                  options = markerOptions(draggable = TRUE))
 
-
+    #Update our UI with our Nitrate Plot
+    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
+    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
+    
+    #If our buffer zone didn't have any FLO interesections, then let the user know and quit out of this function
+    if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
+      return()
+    }
+    
+    stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+    projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
+    
     #Feature switches
     if(displayContribSTPs == 1) {leafletProxy(mapId = "map") %>%
         addCircleMarkers(data = stpCoords,
@@ -64,23 +70,30 @@ function(input, output, session) {
   
   #Alternatively, allow user to click on the map
   observeEvent(input$map_shape_click, {
-    #Update map marker
+    #Clear existing markers and shapes, and update map with new marker location
     current_marker$lat <- input$map_shape_click$lat
     current_marker$lng <- input$map_shape_click$lng
-    
-    #Update our UI with our Nitrate Plot
-    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
-    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
-    stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
-    projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
-    
+
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
       clearGroup("floIDs") %>% #just remove our floIDs group, and keep our static border shape
       addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
                  options = markerOptions(draggable = TRUE))
     
-    #Feature switches
+    #Update our UI with our Nitrate Plot
+    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
+    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
+    
+    #If our buffer zone didn't have any FLO interesections, then let the user know and quit out of this function
+    if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
+      return()
+      }
+    
+    #If we passed the line above, we've got data! Go ahead and see which of our features to enable
+    stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+    projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
+    
+    #See which of our optional features to enable
     if(displayContribSTPs == 1){leafletProxy(mapId = "map") %>%
         addCircleMarkers(data = stpCoords,
                          lng = ~lng,
@@ -97,9 +110,10 @@ function(input, output, session) {
   
   
   #Pass some output text to the UI
-  output$text <- renderText({
+  output$coordInfo <- renderText({
     paste0("Current marker latitude: ", current_marker$lat, " <br> ",
            "Current marker longitude: ", current_marker$lng, " <br> ")
   })
+
 
 }
