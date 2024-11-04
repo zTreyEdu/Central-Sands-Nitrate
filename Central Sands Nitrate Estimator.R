@@ -116,7 +116,7 @@ getStpDataSet <- function() {
 #' Finds the flow lines that intersect with our buffer zone
 #' @param coordBufferZone a polygon object for the buffer zone in question 
 #' @param floDataSet linestring objects, flowlines from our modpath model output
-#' @returns a data frame of flowines
+#' @returns a data frame of flowlines
 getFLOsInBufferZone <- function(coordBufferZone, floDataSet) {
   intersections <- st_intersects(coordBufferZone, floDataSet)
   flosInBufferZone <- floDataSet[intersections[[1]], ]
@@ -224,7 +224,7 @@ createPlots <- function(estimatedNitrateLevels) {
 #' @returns a list with the following structure:
 #'            stpIDs: a data frame of contributing point IDs
 #'            landCover: Land Cover fraction of all of the contributing zones
-#'            Index 3: Estimated nitrate level (Note: not yet added in)
+#'            Index X: Estimated nitrate level (Note: not yet added in)
 runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
   contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
   print(contributingPoints)
@@ -239,9 +239,9 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   print(estimatedNitrateLevels)
   
   # ----2.6 Output to the user----
-  returnList <- list(stpIDs = contributingPoints, landCover = estimatedNitrateLevels)
+  nitrateEstimatorReturnList <- list(stpIDs = contributingPoints, landCover = estimatedNitrateLevels)
   
-  return(returnList)
+  return(nitrateEstimatorReturnList)
 }
 
 # ----2 Main Tag----
