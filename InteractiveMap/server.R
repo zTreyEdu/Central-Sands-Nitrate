@@ -36,12 +36,15 @@ function(input, output, session) {
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
     output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
     stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+    projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
 
     #Update the map with our new marker locations
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
+      clearGroup("floIDs") %>% #just remove our floIDs group, and keep our static border shape
       addMarkers(data = data.frame(lat = current_marker$lat, lng = current_marker$lng),
                  options = markerOptions(draggable = TRUE))
+
 
     #Feature switches
     if(displayContribSTPs == 1) {leafletProxy(mapId = "map") %>%
@@ -50,6 +53,12 @@ function(input, output, session) {
                          lat = ~lat,
                          color = "blue",
                          radius = 5)}
+    if(displayContribFLOs == 1) {leafletProxy(mapId = "map") %>%
+        addPolylines(data = projectedFLODIDs,
+                     group = "floIDs",
+                     color = "green",
+                     weight = 3,
+                     opacity = 0.8)}
 
   })
   
@@ -63,9 +72,11 @@ function(input, output, session) {
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
     output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
     stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+    projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
     
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
+      clearGroup("floIDs") %>% #just remove our floIDs group, and keep our static border shape
       addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
                  options = markerOptions(draggable = TRUE))
     
@@ -76,6 +87,12 @@ function(input, output, session) {
                          lat = ~lat,
                          color = "blue",
                          radius = 5)}
+    if(displayContribFLOs == 1) {leafletProxy(mapId = "map") %>%
+        addPolylines(data = projectedFLODIDs,
+                     group = "floIDs",
+                     color = "green",
+                     weight = 3,
+                     opacity = 0.8)}
   })
   
   

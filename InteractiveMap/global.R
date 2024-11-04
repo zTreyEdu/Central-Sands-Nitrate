@@ -11,7 +11,8 @@ source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/
 
 #Feature switches----
 #set these to 1 to enable the functionality; set to 0 to disable
-displayContribSTPs <- 1
+displayContribSTPs <- 1 #show circle markers for the starting points of each contributing zone
+displayContribFLOs <- 1 #show the MODPATH lines or each of the flowpaths that intersect the selected buffer region 
 
 #Define some global variable----
 coordsOfInterest <- getCoordsOfInterest()
@@ -73,6 +74,13 @@ getSTPCoords <- function(stpIDs) {
     as.data.frame() %>%
     rename(lng = X, lat = Y) #rename columns for the addCircleMarkers call we'll make later on
   return(stpCoords)
+}
+
+#'Given a data frame of FLO IDs, projects them to CRS 4326
+#'
+getFLOProjection <- function(floIDs) {
+  floIDs <- st_transform(floIDs, crs = 4326)
+  return(floIDs)
 }
   
   

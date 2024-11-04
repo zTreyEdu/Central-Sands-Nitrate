@@ -136,12 +136,15 @@ getContributingPointsFromFLOs <- function(flosInBufferZone) {
 #' @param buffer number, the size of the buffer to generate
 #' @param timeFrameOfInterest a time in years
 #' @param floDataSet line string objects, flow lines from our modpath model output
-#' @returns a data frame of particle IDs
+#' @returns a list with the following structure:
+#'          stpIDs: a list of STP IDs for our contributing zones
+#'          floIDs: a list of FLO IDs for the flowlines that intersect the buffer zone of the selected area
 getContributingPointsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet) {
   coordBufferZone <- getCoordBufferZone(coordsOfInterest, buffer)
   flosInBufferZone <- getFLOsInBufferZone(coordBufferZone,floDataSet)
   contributingPoints <- getContributingPointsFromFLOs(flosInBufferZone)
-  return(contributingPoints)
+  contributingPointsForCoordReturnList <- list(stpIDs = contributingPoints, floIDs = flosInBufferZone)
+  return(contributingPointsForCoordReturnList)
 }
 
 #' Display the x,y coordinates for a given set of particles in the contributing zone
@@ -223,10 +226,13 @@ createPlots <- function(estimatedNitrateLevels) {
 #' @param stpDataSet the starting points from our MODPATH model
 #' @returns a list with the following structure:
 #'            stpIDs: a data frame of contributing point IDs
+#'            floIDs: a data frame of FLO IDs that intersect with our selected buffer zone
 #'            landCover: Land Cover fraction of all of the contributing zones
 #'            Index X: Estimated nitrate level (Note: not yet added in)
 runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
-  contributingPoints <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
+  contributingPointsForCoordReturnList <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
+  contributingPoints <- contributingPointsForCoordReturnList$stpIDs
+  contribFLOIDs <- contributingPointsForCoordReturnList$floIDs
   print(contributingPoints)
   displayCoordsForContribPoints(stpDataSet, contributingPoints)
   
@@ -239,7 +245,7 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   print(estimatedNitrateLevels)
   
   # ----2.6 Output to the user----
-  nitrateEstimatorReturnList <- list(stpIDs = contributingPoints, landCover = estimatedNitrateLevels)
+  nitrateEstimatorReturnList <- list(stpIDs = contributingPoints, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels)
   
   return(nitrateEstimatorReturnList)
 }
