@@ -12,7 +12,6 @@
 #t10 - is using CRS 3070 okay?
 #t11 - re-do documentation for createPlots
 #t11.1 - review documentation
-#t12 - create function to output the coordinates of the contributing zone
 #t13 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
 
 # -------------------Code begins here -----------------------
@@ -149,6 +148,7 @@ getContribSTPsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest
 }
 
 #' Display the x,y coordinates for a given set of particles in the contributing zone
+#' Note: This function is not used in the main code, and is only intended to help with troubleshooting
 #' @param stpIDs a dataframe of particle IDs whose coordinates we want to display
 #' @param stpDataSet the list of starting points from our modpath model
 displayCoordsForSTPIDs <- function(stpDataSet, stpIDs) {
@@ -156,7 +156,7 @@ displayCoordsForSTPIDs <- function(stpDataSet, stpIDs) {
   stpIDs <- stpDataSet %>%
     inner_join(contributingPoints, by = foreignKey) %>%
     dplyr::select(partidloc_, x, y) #using package::function notation as 'select' is a common name
-  print(stpIDs) #t12 - Rather than grabbing columns x and y, i think there's somethign special i need to do to grab the coords from the point objects. Because I think the projection won't line up otherwise
+  print(stpIDs)
 }
 
 
@@ -234,16 +234,12 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   contribSTPsForCoordReturnList <- getContribSTPsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
   contribSTPIDs <- contribSTPsForCoordReturnList$stpIDs
   contribFLOIDs <- contribSTPsForCoordReturnList$floIDs
-  print(contribSTPIDs)
-  displayCoordsForSTPIDs(stpDataSet, contribSTPIDs)
-  
+ 
   # ----2.4 Find the land use for the contributing points----
   landUseMix <- getLandUseMix(stpDataSet, contribSTPIDs, timeFrameOfInterest)
-  print(landUseMix)
   
   # ----2.5 Find the estimated nitrogen impacts given the land use----
   estimatedNitrateLevels <- getEstimatedNitrateLevels(landUseMix)
-  print(estimatedNitrateLevels)
   
   # ----2.6 Output to the user----
   nitrateEstimatorReturnList <- list(stpIDs = contribSTPIDs, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels)
