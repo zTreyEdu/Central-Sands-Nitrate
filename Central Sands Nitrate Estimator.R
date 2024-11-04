@@ -5,8 +5,6 @@
 # TODO
 #t03 - figure out what value buffer should be set to
 #t04 - double check my RETURNs statements make sure i'm using correct with words like 'list' and 'dataframe' correctly
-#t05 - as of 9 Sept, this ~7 seconds to run. Per profvis, the file reading is 5 seconds of this. Perhaps there's a way to query a database, rather than just loading it in? I could look for performance gains, elsewhere Which might mean i actually need to learn how some of these APIs work. Alas.
-#t06 - update getLandCoverMix to accommodate different times if needed. I'm still not certain on the logic, but I think it's either a loop to aggregate stuff, or just some subtraction for "get the land use from X years ago"
 #t08 - add handling for null results
 #t09 - confirm how I handle coordinate input and CRS syncing is correct
 #t10 - is using CRS 3070 okay?
