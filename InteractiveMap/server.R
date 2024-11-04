@@ -51,12 +51,12 @@ function(input, output, session) {
         addCircleMarkers(data = stpCoords,
                          lng = ~lng,
                          lat = ~lat,
-                         color = "blue",
+                         color = "green",
                          radius = 5)}
     if(displayContribFLOs == 1) {leafletProxy(mapId = "map") %>%
         addPolylines(data = projectedFLODIDs,
                      group = "floIDs",
-                     color = "green",
+                     color = "blue",
                      weight = 3,
                      opacity = 0.8)}
 
@@ -85,12 +85,12 @@ function(input, output, session) {
         addCircleMarkers(data = stpCoords,
                          lng = ~lng,
                          lat = ~lat,
-                         color = "blue",
+                         color = "green",
                          radius = 5)}
     if(displayContribFLOs == 1) {leafletProxy(mapId = "map") %>%
         addPolylines(data = projectedFLODIDs,
                      group = "floIDs",
-                     color = "green",
+                     color = "blue",
                      weight = 3,
                      opacity = 0.8)}
   })
