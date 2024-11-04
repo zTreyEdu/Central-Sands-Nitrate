@@ -6,7 +6,7 @@
 #t03 - figure out what value buffer should be set to
 #t04 - double check my RETURNs statements make sure i'm using correct with words like 'list' and 'dataframe' correctly
 #t05 - as of 9 Sept, this ~7 seconds to run. Per profvis, the file reading is 5 seconds of this. Perhaps there's a way to query a database, rather than just loading it in? I could look for performance gains, elsewhere Which might mean i actually need to learn how some of these APIs work. Alas.
-#t06 - update getLandUseMix to accommodate different times if needed. I'm still not certain on the logic, but I think it's either a loop to aggregate stuff, or just some subtraction for "get the land use from X years ago"
+#t06 - update getLandCoverMix to accommodate different times if needed. I'm still not certain on the logic, but I think it's either a loop to aggregate stuff, or just some subtraction for "get the land use from X years ago"
 #t08 - add handling for null results
 #t09 - confirm how I handle coordinate input and CRS syncing is correct
 #t10 - is using CRS 3070 okay?
@@ -164,34 +164,34 @@ displayCoordsForSTPIDs <- function(stpDataSet, stpIDs) {
 #' @param stpIDs a dataframe of starting point particle IDs
 #' @param stpDataSet the list of starting points from our modpath model
 #' @param timeFrameOfInterest a time in years
-#' @returns a data frame of land uses
-getLandUseMix <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
+#' @returns a data frame of land cover
+getLandCoverMix <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
   foreignKey <- c("partidloc_" = "partidloc_")
-  landUseMix <- stpDataSet %>%
+  landCoverMix <- stpDataSet %>%
     inner_join(stpIDs, by = foreignKey) %>%
     dplyr::select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use; #using package::function notation as 'select' is a common name
-  return(landUseMix)
+  return(landCoverMix)
 }
 
 #' Summarize the contributing zones by landuse mix
-#' @param landUseMix a dataframe with one row per particle IDs and a column for land use
-#' @returns a data frame with one row per land use, a column for the Count of particle IDs with that land use, and a column with the relative frequency of that land use
-getSummarizedLandUseMix <- function(landUseMix) {
-  summarizedLandUseMix <- landUseMix %>%
+#' @param landCoverMix a dataframe with one row per particle IDs and a column for land cover
+#' @returns a data frame with one row per land cover, a column for the Count of particle IDs with that land cover, and a column with the relative frequency of that land use
+getSummarizedLandCoverMix <- function(landCoverMix) {
+  summarizedLandCoverMix <- landCoverMix %>%
     group_by(CDL_2022_2) %>%
     summarise(
       CDL_2022_Count = n(),
-      CDL_2022_Relative = n() / nrow(landUseMix)
+      CDL_2022_Relative = n() / nrow(landCoverMix)
     )
-  return(summarizedLandUseMix)
+  return(summarizedLandCoverMix)
 }
 
 #' Calculates the estimated nitrate levels given a landuse mix
-#' @param landUseMix a dataframe with one row per particle IDs and a column for land use
+#' @param landCoverMix a dataframe with one row per particle IDs and a column for land cover
 #' @return ???
-getEstimatedNitrateLevels <- function(landUseMix) {
+getEstimatedNitrateLevels <- function(landCoverMix) {
   # I think it'll eventually be an equation that does something like:
-  #      Nitrate = (c1)Corn + (c2)Potato + (c3)Woodlands, etc. where each 'c' is a contstant for how much land use contributes to NO3.
+  #      Nitrate = (c1)Corn + (c2)Potato + (c3)Woodlands, etc. where each 'c' is a contstant for how much land cover contributes to NO3.
   # We'd also like a way to do error bars. Which I *think* we'll just get for each term in our equation. And then...I think you just add the errors? I'll ask my Stats TAs
   # so i might need ways to hand:
   # -- a function to set up constants
@@ -199,8 +199,8 @@ getEstimatedNitrateLevels <- function(landUseMix) {
   # -- a function that runs the equation
   # -- output
   
-  summarizedLandUseMix <- getSummarizedLandUseMix(landUseMix)
-  return(summarizedLandUseMix)
+  summarizedLandCovereMix <- getSummarizedLandCoverMix(landCoverMix)
+  return(summarizedLandCovereMix)
 }
 
 #' Create some plots for our users
@@ -236,10 +236,10 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   contribFLOIDs <- contribSTPsForCoordReturnList$floIDs
  
   # ----2.4 Find the land use for the contributing points----
-  landUseMix <- getLandUseMix(stpDataSet, contribSTPIDs, timeFrameOfInterest)
+  landCoverMix <- getLandCoverMix(stpDataSet, contribSTPIDs, timeFrameOfInterest)
   
   # ----2.5 Find the estimated nitrogen impacts given the land use----
-  estimatedNitrateLevels <- getEstimatedNitrateLevels(landUseMix)
+  estimatedNitrateLevels <- getEstimatedNitrateLevels(landCoverMix)
   
   # ----2.6 Output to the user----
   nitrateEstimatorReturnList <- list(stpIDs = contribSTPIDs, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels)
