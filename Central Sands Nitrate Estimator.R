@@ -123,12 +123,13 @@ getFLOsInBufferZone <- function(coordBufferZone, floDataSet) {
   return(flosInBufferZone)
 }
 
-#' Finds the contributing points of our flow lines
+#' Finds the contributing points (contribSTPs) of our flow lines
 #' @param flosInBufferZone a dataframe of linestring objects, the flowlines that intersected our buffered region
-#' @returns a dataframe of particle IDs for the contributing points
-getContributingPointsFromFLOs <- function(flosInBufferZone) {
-  contributingPoints <- data.frame(partidloc_ = flosInBufferZone$conversion_to_partidloc_)
-  return(contributingPoints)
+#' @returns a dataframe of particle IDs for the contributing points. Note: the IDs are just a list of IDs, not the actual SF Objects.
+#'          The actual SF objects need to be retrieved from the stpDataSet later on
+getContribSTPsFromFLOs <- function(flosInBufferZone) {
+  contribSTPIDs <- data.frame(partidloc_ = flosInBufferZone$conversion_to_partidloc_)
+  return(contribSTPIDs)
 }
 
 #' Get the starting points that contribute Nitrate to our area of interest
@@ -139,35 +140,35 @@ getContributingPointsFromFLOs <- function(flosInBufferZone) {
 #' @returns a list with the following structure:
 #'          stpIDs: a list of STP IDs for our contributing zones
 #'          floIDs: a list of FLO IDs for the flowlines that intersect the buffer zone of the selected area
-getContributingPointsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet) {
+getContribSTPsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet) {
   coordBufferZone <- getCoordBufferZone(coordsOfInterest, buffer)
   flosInBufferZone <- getFLOsInBufferZone(coordBufferZone,floDataSet)
-  contributingPoints <- getContributingPointsFromFLOs(flosInBufferZone)
-  contributingPointsForCoordReturnList <- list(stpIDs = contributingPoints, floIDs = flosInBufferZone)
-  return(contributingPointsForCoordReturnList)
+  contribSTPIDs <- getContribSTPsFromFLOs(flosInBufferZone)
+  contribSTPsForCoordReturnList <- list(stpIDs = contribSTPIDs, floIDs = flosInBufferZone)
+  return(contribSTPsForCoordReturnList)
 }
 
 #' Display the x,y coordinates for a given set of particles in the contributing zone
-#' @param contributingPoints a dataframe of particle IDs whose coordinates we want to display
+#' @param stpIDs a dataframe of particle IDs whose coordinates we want to display
 #' @param stpDataSet the list of starting points from our modpath model
-displayCoordsForContribPoints <- function(stpDataSet, contributingPoints) {
+displayCoordsForSTPIDs <- function(stpDataSet, stpIDs) {
   foreignKey <- c("partidloc_" = "partidloc_")
-  coordsForContribPoints <- stpDataSet %>%
+  stpIDs <- stpDataSet %>%
     inner_join(contributingPoints, by = foreignKey) %>%
     dplyr::select(partidloc_, x, y) #using package::function notation as 'select' is a common name
-  print(coordsForContribPoints) #t12 - Rather than grabbing columns x and y, i think there's somethign special i need to do to grab the coords from the point objects. Because I think the projection won't line up otherwise
+  print(stpIDs) #t12 - Rather than grabbing columns x and y, i think there's somethign special i need to do to grab the coords from the point objects. Because I think the projection won't line up otherwise
 }
 
 
 #' Get the land use mix for our starting points
-#' @param contributingPoints a dataframe of particle IDs
+#' @param stpIDs a dataframe of starting point particle IDs
 #' @param stpDataSet the list of starting points from our modpath model
 #' @param timeFrameOfInterest a time in years
 #' @returns a data frame of land uses
-getLandUseMix <- function(stpDataSet, contributingPoints, timeFrameOfInterest) {
+getLandUseMix <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
   foreignKey <- c("partidloc_" = "partidloc_")
   landUseMix <- stpDataSet %>%
-    inner_join(contributingPoints, by = foreignKey) %>%
+    inner_join(stpIDs, by = foreignKey) %>%
     dplyr::select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use; #using package::function notation as 'select' is a common name
   return(landUseMix)
 }
@@ -230,14 +231,14 @@ createPlots <- function(estimatedNitrateLevels) {
 #'            landCover: Land Cover fraction of all of the contributing zones
 #'            Index X: Estimated nitrate level (Note: not yet added in)
 runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
-  contributingPointsForCoordReturnList <- getContributingPointsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
-  contributingPoints <- contributingPointsForCoordReturnList$stpIDs
-  contribFLOIDs <- contributingPointsForCoordReturnList$floIDs
-  print(contributingPoints)
-  displayCoordsForContribPoints(stpDataSet, contributingPoints)
+  contribSTPsForCoordReturnList <- getContribSTPsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
+  contribSTPIDs <- contribSTPsForCoordReturnList$stpIDs
+  contribFLOIDs <- contribSTPsForCoordReturnList$floIDs
+  print(contribSTPIDs)
+  displayCoordsForSTPIDs(stpDataSet, contribSTPIDs)
   
   # ----2.4 Find the land use for the contributing points----
-  landUseMix <- getLandUseMix(stpDataSet, contributingPoints, timeFrameOfInterest)
+  landUseMix <- getLandUseMix(stpDataSet, contribSTPIDs, timeFrameOfInterest)
   print(landUseMix)
   
   # ----2.5 Find the estimated nitrogen impacts given the land use----
@@ -245,7 +246,7 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   print(estimatedNitrateLevels)
   
   # ----2.6 Output to the user----
-  nitrateEstimatorReturnList <- list(stpIDs = contributingPoints, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels)
+  nitrateEstimatorReturnList <- list(stpIDs = contribSTPIDs, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels)
   
   return(nitrateEstimatorReturnList)
 }
