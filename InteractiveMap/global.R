@@ -9,20 +9,23 @@ library(shinydashboard)
 
 source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Central Sands Nitrate Estimator.R")
 
-#Define some global variable
+#Feature switches----
+#set these to 1 to enable the functionality; set to 0 to disable
+displayContribSTPs <- 1
+
+#Define some global variable----
 coordsOfInterest <- getCoordsOfInterest()
 timeFrameOfInterest <- getTimeFrameOfInterest()
 buffer <- getBuffer()
 floDataSet <- getFloDataSet()
 stpDataSet <- getStpDataSet()
 
-
-#Draw a boundary line for our pathline model
+#Draw a boundary line for our MODPATH model----
 pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/Pathline Boundary.shp")
 pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
   mutate(fill_color = "#1C00ff00")
 
-#Define some functions
+#Define functions----
 
 #' Let us know if the point the user selected is within our boundary
 #' @param pathLineBoundary a polygon shape file of our region
@@ -46,7 +49,7 @@ getRegionData <- function(pathLineBoundary, marker) {
 #'Given a longitude and latitude, generate a plot of nitrogen estimate info
 #' @param longitude a longitude
 #' @param latitude a latitude
-#' @returns a bar plot of nitrate data
+#' @returns a list of return values. View runNitrateEstimator for details
 generateNitrateEstimates <- function(longitude, latitude) {
   selectedCoords <- createSFPoint(longitude, latitude)
   nitrateEstimatorReturnList <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet)

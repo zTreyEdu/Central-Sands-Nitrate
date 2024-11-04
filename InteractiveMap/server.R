@@ -41,12 +41,15 @@ function(input, output, session) {
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
       addMarkers(data = data.frame(lat = current_marker$lat, lng = current_marker$lng),
-                 options = markerOptions(draggable = TRUE)) %>%
-      addCircleMarkers(data = stpCoords,
-                       lng = ~lng,
-                       lat = ~lat,
-                       color = "blue",
-                       radius = 5)
+                 options = markerOptions(draggable = TRUE))
+
+    #Feature switches
+    if(displayContribSTPs == 1) {leafletProxy(mapId = "map") %>%
+        addCircleMarkers(data = stpCoords,
+                         lng = ~lng,
+                         lat = ~lat,
+                         color = "blue",
+                         radius = 5)}
 
   })
   
@@ -64,12 +67,15 @@ function(input, output, session) {
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
       addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
-                 options = markerOptions(draggable = TRUE)) %>%
-      addCircleMarkers(data = stpCoords,
-                       lng = ~lng,
-                       lat = ~lat,
-                       color = "blue",
-                       radius = 5)
+                 options = markerOptions(draggable = TRUE))
+    
+    #Feature switches
+    if(displayContribSTPs == 1){leafletProxy(mapId = "map") %>%
+        addCircleMarkers(data = stpCoords,
+                         lng = ~lng,
+                         lat = ~lat,
+                         color = "blue",
+                         radius = 5)}
   })
   
   
