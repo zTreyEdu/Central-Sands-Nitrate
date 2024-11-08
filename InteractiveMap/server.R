@@ -7,7 +7,11 @@ function(input, output, session) {
   output$map <- renderLeaflet({
     leaflet(pathLineBoundary) %>%
       setView(lng = -89.518247, lat = 44.210243, zoom = 8) %>% #center around plainsfield, WI
-      addTiles() %>%
+      addProviderTiles("Esri.WorldImagery", group = "Terrain") %>% #Terrain Base Layer
+      addProviderTiles("OpenStreetMap.Mapnik", group = "Default") %>% #Default Base Layer
+      addLayersControl(
+        baseGroups = c("Default", "Terrain"),
+        options = layersControlOptions(collapsed = TRUE)) %>%
       addPolygons(color = "black",
                   fillColor = ~fill_color,
                   fillOpacity = 0.7) %>%
