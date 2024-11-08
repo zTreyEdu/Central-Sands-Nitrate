@@ -27,7 +27,7 @@ function(input, output, session) {
                       marker = data.frame(lat = input$map_marker_dragend$lat, lng = input$map_marker_dragend$lng))
     
     if(nrow(regionData) == 0) {
-      showNotification("Error: no data for this location", id = "region_error", type = "error")
+      showNotification("Error: Marker is out of bounds. Please select an area within the bounded region.", id = "region_error", type = "error")
     } else {
       current_marker$lat <- input$map_marker_dragend$lat
       current_marker$lng <- input$map_marker_dragend$lng
@@ -46,6 +46,7 @@ function(input, output, session) {
     
     #If our buffer zone didn't have any FLO interesections, then let the user know and quit out of this function
     if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
+      showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
     }
     
@@ -64,7 +65,7 @@ function(input, output, session) {
                      group = "floIDs",
                      color = "blue",
                      weight = 3,
-                     opacity = 0.8)}
+                     opacity = 0.5)}
 
   })
   
@@ -86,6 +87,7 @@ function(input, output, session) {
     
     #If our buffer zone didn't have any FLO interesections, then let the user know and quit out of this function
     if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
+      showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
       }
     
@@ -105,7 +107,7 @@ function(input, output, session) {
                      group = "floIDs",
                      color = "blue",
                      weight = 3,
-                     opacity = 0.8)}
+                     opacity = 0.5)}
   })
   
   
