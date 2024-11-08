@@ -1,5 +1,12 @@
 #Purpose: hold global info for the Interactive Map
 
+#Install packages
+#install.packages("sf")
+#install.packages("shiny")
+#install.packages("leaflet")
+#install.packages("dplyer")
+#install.packages("shinydashboard")
+
 #Libraries
 library(sf)
 library(shiny)
