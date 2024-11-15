@@ -19,7 +19,7 @@ source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/
 #Feature switches----
 #set these to 1 to enable the functionality; set to 0 to disable
 displayContribSTPs <- 1 #show circle markers for the starting points of each contributing zone
-displayContribFLOs <- 1 #show the MODPATH lines or each of the flowpaths that intersect the selected buffer region 
+displayContribFLOs <- 1 #show the MODPATH lines or each of the flow paths that intersect the selected buffer region 
 
 #Define some global variable----
 coordsOfInterest <- getCoordsOfInterest()
@@ -28,7 +28,7 @@ buffer <- getBuffer()
 floDataSet <- getFloDataSet()
 stpDataSet <- getStpDataSet()
 
-#Draw a boundary line for our MODPATH model----
+#Create a boundary line for our MODPATH model----
 pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/Pathline Boundary.shp")
 pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
   mutate(fill_color = "#1C00ff00")
@@ -38,7 +38,7 @@ pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
 #' Let us know if the point the user selected is within our boundary
 #' @param pathLineBoundary a polygon shape file of our region
 #' @param marker a data frame of the longitude and latitude of the map marker
-#' @returns a row of data if the user selelected something inside our region; returns 0 rows if they are outside the bounds
+#' @returns a row of data if the user selected something inside our region; returns 0 rows if they are outside the bounds
 getRegionData <- function(pathLineBoundary, marker) {
   removeNotification(id = "region_error", session = getDefaultReactiveDomain())
   
@@ -50,14 +50,14 @@ getRegionData <- function(pathLineBoundary, marker) {
                                   "Latitude"))
   st_crs(dat) <- st_crs(pathLineBoundary)
   
-  #Do the heavy lifting to determine if our selected point is inside our shapefile
+  #Do the heavy lifting to determine if our selected point is inside our shape file
   return(as.data.frame(pathLineBoundary)[which(sapply(st_intersects(pathLineBoundary,dat), function(z) if (length(z)==0) NA_integer_ else z[1]) == 1), ])
 }
 
-#'Given a longitude and latitude, generate a plot of nitrogen estimate info
+#'Given a longitude and latitude, generate a info about up gradient land cover
 #' @param longitude a longitude
 #' @param latitude a latitude
-#' @returns a list of return values. View runNitrateEstimator for details
+#' @returns a list of return values. View runNitrateEstimator for list structure
 generateNitrateEstimates <- function(longitude, latitude) {
   selectedCoords <- createSFPoint(longitude, latitude)
   nitrateEstimatorReturnList <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
@@ -66,7 +66,7 @@ generateNitrateEstimates <- function(longitude, latitude) {
   return(nitrateEstimatorReturnList)
 }
 
-#' Given a data frame of our STP IDs (the IDs for our starting points), look up their SF data, and return their coordinates
+#' Given a data frame of STP IDs (the IDs for starting points), look up their SF data, and return their coordinates
 #' @param stpIDs a data frame of STP IDs
 #' @returns a matrix of coordinates for our STPs
 getSTPCoords <- function(stpIDs) {
@@ -84,7 +84,8 @@ getSTPCoords <- function(stpIDs) {
 }
 
 #'Given a data frame of FLO IDs, projects them to CRS 4326
-#'
+#' @param floIDs a data frame of FLO objects
+#' @returns a data frame of FLO IDs projected to CRS 4326
 getFLOProjection <- function(floIDs) {
   floIDs <- st_transform(floIDs, crs = 4326)
   return(floIDs)
