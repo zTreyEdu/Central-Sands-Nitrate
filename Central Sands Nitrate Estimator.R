@@ -13,7 +13,8 @@
 
 # -------------------Code begins here -----------------------
 
-# ----0 Install Packages and Libraries----
+# ----0 Install packages, load libraries, and load global data----
+#Packages
 #install.packages('sf')
 #install.packages('ggplot2')
 #install.packages('raster')
@@ -21,6 +22,7 @@
 #install.packages('devtools')
 #install.packages('profvis')
 
+#Libraries
 library(sf)
 library(ggplot2)
 library(raster)
@@ -28,7 +30,19 @@ library(dplyr)
 #library(devtools)
 #library(profvis)
 
+
 # ----1 Define Functions----
+#' Get Value and Class_Name data from the Cropscape Raster tif
+#' @returns a data frame with the Value and Class-Name Pair for the Cropscape Data set
+getCropScapeClassNames <- function() {
+  cropScapeRaster <- raster("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/GIS/CropScapeData/CDL_2022_20231127143930_554525100.tif")
+  cropScapeLayers <- levels(cropScapeRaster)
+  cropScapeClassNames <- cropScapeLayers[[1]] %>% #grab from the first layer
+    dplyr::select(ID, CLASS_NAME)
+  return(cropScapeClassNames)
+}
+
+
 #' Create an SF Point Object from a pair of coordinates
 #' @param xCoord numeric, an x coordinate
 #' @param yCoord numeric, a y coordinate
@@ -157,8 +171,8 @@ displayCoordsForSTPIDs <- function(stpDataSet, stpIDs) {
 
 
 #' Get the land use mix for our starting points
-#' @param stpIDs a data frame of STP IDs
 #' @param stpDataSet a data frame of STPs from our MODPATH model
+#' @param stpIDs a data frame of STP IDs
 #' @param timeFrameOfInterest a time in years
 #' @returns a data frame of land cover
 getLandCoverMix <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
@@ -166,6 +180,12 @@ getLandCoverMix <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
   landCoverMix <- stpDataSet %>%
     inner_join(stpIDs, by = foreignKey) %>%
     dplyr::select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use; #using package::function notation as 'select' is a common name
+  
+  #Add in the Class Names for the land cover values so us humans can understand
+  cropScapeClassNames <- getCropScapeClassNames()
+  landCoverMix <- landCoverMix %>%
+    left_join(cropScapeClassNames, by = c("CDL_2022_2" = "ID"))
+  
   return(landCoverMix)
 }
 
@@ -174,7 +194,7 @@ getLandCoverMix <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
 #' @returns a data frame with one row per land cover, a column for the Count of particle IDs with that land cover, and a column with the relative frequency of that land use
 getSummarizedLandCoverMix <- function(landCoverMix) {
   summarizedLandCoverMix <- landCoverMix %>%
-    group_by(CDL_2022_2) %>%
+    group_by(CLASS_NAME) %>%
     summarise(
       CDL_2022_Count = n(),
       CDL_2022_Relative = n() / nrow(landCoverMix)
@@ -204,10 +224,10 @@ getEstimatedNitrateLevels <- function(landCoverMix) {
 #' @returns a bar plot of nitrate data
 createPlots <- function(estimatedNitrateLevels) {
   #bar plot
-  barPlotTitle = "Relative Land Use of Contributing Zones"
-  barPlot <- ggplot(estimatedNitrateLevels, aes(x = as.factor(CDL_2022_2), y = CDL_2022_Relative)) +
+  barPlotTitle = "Relative Land Cover of Contributing Zones"
+  barPlot <- ggplot(estimatedNitrateLevels, aes(x = as.factor(CLASS_NAME), y = CDL_2022_Relative)) +
     geom_bar(stat = "identity", fill = "steelblue") +
-    labs(x = "Land Use", y = "Percent", title = barPlotTitle) +
+    labs(x = "Land Cover", y = "Percent", title = barPlotTitle) +
     theme_minimal() +
     scale_y_continuous(labels = scales::percent)
   return(barPlot)
