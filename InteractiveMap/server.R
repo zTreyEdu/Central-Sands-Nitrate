@@ -6,9 +6,10 @@ function(input, output, session) {
   output$map <- renderLeaflet({
     leaflet(pathLineBoundary) %>%
       setView(lng = -89.518247, lat = 44.210243, zoom = 8) %>% #center around Plainsfield, WI
-      addProviderTiles("Esri.WorldImagery", group = "Terrain") %>% #Terrain Base Layer
+      addProviderTiles("Esri.WorldImagery", group = "Aerial") %>% #Aerial Photo Base Layer
+      addProviderTiles("Stadia.StamenTerrain", group = "Terrain") %>%
       addProviderTiles("OpenStreetMap.Mapnik", group = "Default") %>% #Default Base Layer
-      addLayersControl(baseGroups = c("Default", "Terrain"),
+      addLayersControl(baseGroups = c("Default", "Aerial", "Terrain"),
                        options = layersControlOptions(collapsed = TRUE)) %>% #Add toggle-able base layers
       addPolygons(color = "black",
                   fillColor = ~fill_color,
@@ -59,7 +60,7 @@ function(input, output, session) {
       addCircleMarkers(data = stpCoords,
                          lng = ~lng,
                          lat = ~lat,
-                         color = "purple",
+                         color = "orange",
                          radius = 5)
       }
     if(displayContribFLOs == 1) {
@@ -103,7 +104,7 @@ function(input, output, session) {
       addCircleMarkers(data = stpCoords,
                          lng = ~lng,
                          lat = ~lat,
-                         color = "purple",
+                         color = "orange",
                          radius = 5)
       }
     if(displayContribFLOs == 1) {
@@ -119,19 +120,31 @@ function(input, output, session) {
   
   #Pass some output text to the UI
   output$coordInfo <- renderText({
-    paste0("Current marker latitude: ", current_marker$lat, " <br> ",
-           "Current marker longitude: ", current_marker$lng, " <br> ")
+    paste0("Current marker latitude: ", current_marker$lat, "<br>",
+           "Current marker longitude: ", current_marker$lng, "<br>")
   })
-  output$appExplainer <- renderText({
-    paste0("explain how to interpret the map")
+  output$mapExplainer <- renderText({
+    paste0(p(strong("Map Explaination")),
+           "The purple dots represent simulated groundwater entry points.", "<br>",
+           "The blue lines represent the modeled groundwater flow.")
   })
   output$chartExplainer <- renderText({
-    paste0("explain how to interpret the chart", p(strong("bold text")))
+    paste0(p(strong("Chart Explanation")),
+           "This bar chart shows the break down of land cover for the groundwater entry points")
   })
   output$externalLinks <- renderText({
-    paste0(h1("Additional Info"), a(href="https://www.epa.gov/mn/what-nitrate", "Link to EPA"))
+    paste0(h1("Additional Info"),
+           "* ", a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency"), "<br>",
+           "* ", a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education"), "<br>",
+           "* Learn about the modeling software used: ",
+           a(href = "https://www.usgs.gov/mission-areas/water-resources/science/modflow-and-related-programs", "MODFLOW"),
+           " and ",
+           a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH"))
   })
   output$takeAction <- renderText({
-    paste0("something that helps people take action on what they're seeing")
+    paste0(p(strong("Action")),
+           "If your well has a high percentage of agricultural contributing zones, we recommend you test your well at least once a --time--.",
+           "You can order a test here: --link out to website to order testing--"
+           )
   })
 }
