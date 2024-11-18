@@ -54,15 +54,6 @@ function(input, output, session) {
     }
 
     #See which of our optional features to enable
-    if(displayContribSTPs == 1) {
-      stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
-      leafletProxy(mapId = "map") %>%
-      addCircleMarkers(data = stpCoords,
-                         lng = ~lng,
-                         lat = ~lat,
-                         color = "orange",
-                         radius = 5)
-      }
     if(displayContribFLOs == 1) {
       projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
@@ -71,7 +62,17 @@ function(input, output, session) {
                      color = "blue",
                      weight = 3,
                      opacity = 0.5)
-      }
+    }
+    
+    if(displayContribSTPs == 1) {
+      stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+      leafletProxy(mapId = "map") %>%
+        addCircleMarkers(data = stpCoords,
+                         lng = ~lng,
+                         lat = ~lat,
+                         color = "orange",
+                         radius = 5)
+    }
 
   })
   
@@ -98,15 +99,6 @@ function(input, output, session) {
       }
     
     #See which of our optional features to enable
-    if(displayContribSTPs == 1){
-      stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
-      leafletProxy(mapId = "map") %>%
-      addCircleMarkers(data = stpCoords,
-                         lng = ~lng,
-                         lat = ~lat,
-                         color = "orange",
-                         radius = 5)
-      }
     if(displayContribFLOs == 1) {
       projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
@@ -115,7 +107,17 @@ function(input, output, session) {
                      color = "blue",
                      weight = 3,
                      opacity = 0.5)
-      }
+    }
+    
+    if(displayContribSTPs == 1){
+      stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+      leafletProxy(mapId = "map") %>%
+        addCircleMarkers(data = stpCoords,
+                         lng = ~lng,
+                         lat = ~lat,
+                         color = "orange",
+                         radius = 5)
+    }
   })
   
   #Pass some output text to the UI
