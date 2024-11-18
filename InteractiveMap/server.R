@@ -126,16 +126,16 @@ function(input, output, session) {
            "Current marker longitude: ", current_marker$lng, "<br>")
   })
   output$mapExplainer <- renderText({
-    paste0(p(strong("Map Explaination")),
+    paste0(h2("Map Explaination"),
            "The purple dots represent simulated groundwater entry points.", "<br>",
            "The blue lines represent the modeled groundwater flow.")
   })
   output$chartExplainer <- renderText({
-    paste0(p(strong("Chart Explanation")),
+    paste0(h2("Chart Explanation"),
            "This bar chart shows the break down of land cover for the groundwater entry points")
   })
   output$externalLinks <- renderText({
-    paste0(h1("Additional Info"),
+    paste0(h2("Additional Info"),
            "* ", a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency"), "<br>",
            "* ", a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education"), "<br>",
            "* Learn about the modeling software used: ",
@@ -144,7 +144,7 @@ function(input, output, session) {
            a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH"))
   })
   output$takeAction <- renderText({
-    paste0(p(strong("Action")),
+    paste0(h2("Action"),
            "If your well has a high percentage of agricultural contributing zones, we recommend you test your well at least once a --time--.",
            "You can order a test here: --link out to website to order testing--"
            )
