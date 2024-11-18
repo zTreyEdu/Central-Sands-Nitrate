@@ -126,7 +126,7 @@ function(input, output, session) {
            "Current marker longitude: ", current_marker$lng, "<br>")
   })
   output$mapExplainer <- renderText({
-    paste0(h2("Map Explaination"),
+    paste0(h2("Map Explanation"),
            "The purple dots represent simulated groundwater entry points.", "<br>",
            "The blue lines represent the modeled groundwater flow.")
   })
