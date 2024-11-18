@@ -59,7 +59,7 @@ function(input, output, session) {
       addCircleMarkers(data = stpCoords,
                          lng = ~lng,
                          lat = ~lat,
-                         color = "green",
+                         color = "purple",
                          radius = 5)
       }
     if(displayContribFLOs == 1) {
@@ -103,7 +103,7 @@ function(input, output, session) {
       addCircleMarkers(data = stpCoords,
                          lng = ~lng,
                          lat = ~lat,
-                         color = "green",
+                         color = "purple",
                          radius = 5)
       }
     if(displayContribFLOs == 1) {
@@ -121,5 +121,17 @@ function(input, output, session) {
   output$coordInfo <- renderText({
     paste0("Current marker latitude: ", current_marker$lat, " <br> ",
            "Current marker longitude: ", current_marker$lng, " <br> ")
+  })
+  output$appExplainer <- renderText({
+    paste0("explain how to interpret the map")
+  })
+  output$chartExplainer <- renderText({
+    paste0("explain how to interpret the chart", p(strong("bold text")))
+  })
+  output$externalLinks <- renderText({
+    paste0(h1("Additional Info"), a(href="https://www.epa.gov/mn/what-nitrate", "Link to EPA"))
+  })
+  output$takeAction <- renderText({
+    paste0("something that helps people take action on what they're seeing")
   })
 }
