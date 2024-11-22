@@ -21,11 +21,6 @@ dashboardPage(
           )
       ),
       fluidRow(
-      box(width = 6,
-          htmlOutput("coordInfo")
-          )
-      ),
-      fluidRow(
         box(htmlOutput("takeAction")),
         box(htmlOutput("externalLinks"))
         )

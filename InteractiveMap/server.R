@@ -145,10 +145,6 @@ function(input, output, session) {
   })
   
   #Pass some output text to the UI
-  output$coordInfo <- renderText({
-    paste0("Current marker latitude: ", current_marker$lat, "<br>",
-           "Current marker longitude: ", current_marker$lng, "<br>")
-  })
   output$mapExplainer <- renderText({
     paste0(h2("Map Explanation"),
            "The purple dots represent simulated groundwater entry points.", "<br>",
