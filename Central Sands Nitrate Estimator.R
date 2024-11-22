@@ -229,7 +229,7 @@ createPlots <- function(estimatedNitrateLevels) {
   barPlot <- ggplot(estimatedNitrateLevels, aes(x = as.factor(CLASS_NAME), y = CDL_2022_Relative)) +
     geom_bar(stat = "identity", fill = "steelblue") +
     labs(x = "Land Cover", y = "Percent", title = barPlotTitle) +
-    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + #tilt axis labels
     scale_y_continuous(labels = scales::percent)
   return(barPlot)
 }
