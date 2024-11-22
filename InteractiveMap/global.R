@@ -29,7 +29,7 @@ floDataSet <- getFloDataSet()
 stpDataSet <- getStpDataSet()
 
 #Create a boundary line for our MODPATH model----
-pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/Pathline Boundary.shp")
+pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/prelim_ff_model_bounds_proposed.shp")
 pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
   mutate(fill_color = "#1C00ff00")
 
