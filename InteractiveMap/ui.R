@@ -7,7 +7,13 @@ dashboardPage(
   dashboardBody(
     fluidRow(
       box(width = 6,
-          
+          htmlOutput("mapExplainer")
+          ),
+      box(width = 6,
+          htmlOutput("chartExplainer"))
+    ),
+    fluidRow(
+      box(width = 6,
           leafletOutput(outputId = "map")
           ),
       box(width = 6,
@@ -16,16 +22,12 @@ dashboardPage(
       ),
       fluidRow(
       box(width = 6,
-          htmlOutput("mapExplainer")
-          ),
-      box(width = 6,
           htmlOutput("coordInfo")
           )
       ),
       fluidRow(
-        box(htmlOutput("externalLinks")),
         box(htmlOutput("takeAction")),
-        box(htmlOutput("chartExplainer"))
+        box(htmlOutput("externalLinks"))
         )
     ),
   title = "Interactive Groundwater Flow Map"
