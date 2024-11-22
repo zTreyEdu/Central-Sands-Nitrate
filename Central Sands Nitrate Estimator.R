@@ -149,11 +149,12 @@ getContribSTPsFromFLOs <- function(flosInBufferZone) {
 #' @returns a list with the following structure:
 #'          stpIDs: a list of STP IDs for our contributing zones
 #'          floIDs: a list of FLO IDs for the flow lines that intersect the buffer zone of the selected area
+#'          bufferZone: the polygon for our buffer zone
 getContribSTPsForCoord <- function(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet) {
   coordBufferZone <- getCoordBufferZone(coordsOfInterest, buffer)
   flosInBufferZone <- getFLOsInBufferZone(coordBufferZone,floDataSet)
   contribSTPIDs <- getContribSTPsFromFLOs(flosInBufferZone)
-  contribSTPsForCoordReturnList <- list(stpIDs = contribSTPIDs, floIDs = flosInBufferZone)
+  contribSTPsForCoordReturnList <- list(stpIDs = contribSTPIDs, floIDs = flosInBufferZone, bufferZone = coordBufferZone)
   return(contribSTPsForCoordReturnList)
 }
 
@@ -243,12 +244,14 @@ createPlots <- function(estimatedNitrateLevels) {
 #'            stpIDs: a data frame of contributing point IDs
 #'            floIDs: a data frame of FLO IDs that intersect with our selected buffer zone
 #'            landCover: Land Cover fraction of all of the contributing zones
+#'            bufferZone: a polygon of our buffer zone
 #'            Index X: Estimated nitrate level (Note: not yet added in)
 runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
   #Find contributing FLOs and STPs for the coordinates of interest
   contribSTPsForCoordReturnList <- getContribSTPsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
   contribSTPIDs <- contribSTPsForCoordReturnList$stpIDs
   contribFLOIDs <- contribSTPsForCoordReturnList$floIDs
+  bufferZone <- contribSTPsForCoordReturnList$bufferZone
  
   # Find the land cover for the contributing points
   landCoverMix <- getLandCoverMix(stpDataSet, contribSTPIDs, timeFrameOfInterest)
@@ -257,7 +260,7 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   estimatedNitrateLevels <- getEstimatedNitrateLevels(landCoverMix)
   
   # Organize and return data
-  nitrateEstimatorReturnList <- list(stpIDs = contribSTPIDs, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels)
+  nitrateEstimatorReturnList <- list(stpIDs = contribSTPIDs, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels, bufferZone = bufferZone)
   return(nitrateEstimatorReturnList)
 }
 

@@ -39,7 +39,7 @@ function(input, output, session) {
     #Update the map with our new marker locations
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
-      clearGroup("floIDs") %>% #just remove our floIDs group, and keep our static border shape
+      clearGroup("dynamic") %>% #only clear shapes we're drawing for each point, and keep our static border shape
       addMarkers(data = data.frame(lat = current_marker$lat, lng = current_marker$lng),
                  options = markerOptions(draggable = TRUE))
 
@@ -52,13 +52,24 @@ function(input, output, session) {
       showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
     }
-
+    
     #See which of our optional features to enable
+    if(dispayBufferZone == 1) {
+      bufferZone <- st_transform(nitrateEstimatorReturnList$bufferZone, crs = 4326)
+      leafletProxy(mapId = "map") %>%
+        addPolygons(data = bufferZone,
+                    group = "dynamic",
+                    color = "red",
+                    opacity = 0.25,
+                    fillColor = "grey",
+                    fillOpacity = 0.85)
+    }
+
     if(displayContribFLOs == 1) {
       projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
       addPolylines(data = projectedFLODIDs,
-                     group = "floIDs",
+                     group = "dynamic",
                      color = "blue",
                      weight = 3,
                      opacity = 0.5)
@@ -84,7 +95,7 @@ function(input, output, session) {
 
     leafletProxy(mapId = "map") %>%
       clearMarkers() %>%
-      clearGroup("floIDs") %>% #just remove our floIDs group and keep our static border shape
+      clearGroup("dynamic") %>% #only clear shapes we're drawing for each point, and keep our static border shape
       addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
                  options = markerOptions(draggable = TRUE))
     
@@ -99,11 +110,22 @@ function(input, output, session) {
       }
     
     #See which of our optional features to enable
+    if(dispayBufferZone == 1) {
+      bufferZone <- st_transform(nitrateEstimatorReturnList$bufferZone, crs = 4326)
+      leafletProxy(mapId = "map") %>%
+        addPolygons(data = bufferZone,
+                    group = "dynamic",
+                    color = "red",
+                    opacity = 0.25,
+                    fillColor = "grey",
+                    fillOpacity = 0.85)
+    }
+    
     if(displayContribFLOs == 1) {
       projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
       addPolylines(data = projectedFLODIDs,
-                     group = "floIDs",
+                     group = "dynamic",
                      color = "blue",
                      weight = 3,
                      opacity = 0.5)
