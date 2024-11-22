@@ -4,6 +4,7 @@
 #install.packages("sf")
 #install.packages("shiny")
 #install.packages("leaflet")
+#install.packages('leaflet.extras2')
 #install.packages("dplyer")
 #install.packages("shinydashboard")
 
@@ -11,6 +12,7 @@
 library(sf)
 library(shiny)
 library(leaflet)
+library(leaflet.extras2)
 library(dplyr)
 library(shinydashboard)
 

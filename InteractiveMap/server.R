@@ -68,11 +68,12 @@ function(input, output, session) {
     if(displayContribFLOs == 1) {
       projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
-      addPolylines(data = projectedFLODIDs,
-                     group = "dynamic",
-                     color = "blue",
-                     weight = 3,
-                     opacity = 0.5)
+        addAntpath(data = projectedFLODIDs,
+                       group = "dynamic",
+                       color = "blue",
+                       weight = 3,
+                       opacity = 0.5,
+                   options = antpathOptions(delay = 2000))
     }
     
     if(displayContribSTPs == 1) {
@@ -124,11 +125,12 @@ function(input, output, session) {
     if(displayContribFLOs == 1) {
       projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
-      addPolylines(data = projectedFLODIDs,
-                     group = "dynamic",
-                     color = "blue",
-                     weight = 3,
-                     opacity = 0.5)
+        addAntpath(data = projectedFLODIDs,
+                       group = "dynamic",
+                       color = "blue",
+                       weight = 3,
+                       opacity = 0.5,
+                   options = antpathOptions(delay = 2000))
     }
     
     if(displayContribSTPs == 1){
@@ -150,7 +152,9 @@ function(input, output, session) {
   output$mapExplainer <- renderText({
     paste0(h2("Map Explanation"),
            "The purple dots represent simulated groundwater entry points.", "<br>",
-           "The blue lines represent the modeled groundwater flow.")
+           "The blue lines represent the modeled groundwater flow.", "<br>",
+           "Current marker latitude: ", current_marker$lat, "<br>",
+           "Current marker longitude: ", current_marker$lng, "<br>")
   })
   output$chartExplainer <- renderText({
     paste0(h2("Chart Explanation"),
