@@ -4,14 +4,15 @@
 function(input, output, session) {
   #Initial call to create map
   output$map <- renderLeaflet({
-    leaflet(pathLineBoundary) %>%
+    leaflet() %>%
       setView(lng = -89.518247, lat = 44.210243, zoom = 8) %>% #center around Plainsfield, WI
       addProviderTiles("Esri.WorldImagery", group = "Aerial") %>% #Aerial Photo Base Layer
       addProviderTiles("Stadia.StamenTerrain", group = "Terrain") %>%
       addProviderTiles("OpenStreetMap.Mapnik", group = "Default") %>% #Default Base Layer
       addLayersControl(baseGroups = c("Default", "Aerial", "Terrain"),
                        options = layersControlOptions(collapsed = TRUE)) %>% #Add toggle-able base layers
-      addPolygons(color = "black",
+      addPolygons(data = pathLineBoundary,
+                  color = "black",
                   fillColor = ~fill_color,
                   fillOpacity = 0.7) %>% #adds our pathLineBoundary shape
       addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE)) #create a moveable map marker
