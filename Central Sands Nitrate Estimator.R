@@ -11,6 +11,7 @@
 #t11.1 - review documentation
 #t13 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
 #t14 - determine groupings for bar chart output
+#15 - add proper prediction equation and clean up getEstimatedNitrateLevels
 
 # -------------------Code begins here -----------------------
 
@@ -207,19 +208,35 @@ getSummarizedLandCoverMix <- function(landCoverMix) {
 }
 
 #' Calculates the estimated nitrate levels given a land cover mix
+#' t15
 #' @param landCoverMix a data frame with one row per particle IDs and a column for land cover
 #' @return ???
 getEstimatedNitrateLevels <- function(landCoverMix) {
-  # I think it'll eventually be an equation that does something like:
-  #      Nitrate = (c1)Corn + (c2)Potato + (c3)Woodlands, etc. where each 'c' is a constant for how much land cover contributes to NO3.
-  # We'd also like a way to do error bars. Which I *think* we'll just get for each term in our equation. And then...I think you just add the errors? I'll ask my Stats TAs
-  # so i might need ways to hand:
-  # -- a function to set up constants
-  # -- additional handling for factoring in different years (it's currently just using 2022 data)
-  # -- a function that runs the equation
-  # -- output
-  
+  #Get our Summarized Land Cover Mix
+  #
   summarizedLandCovereMix <- getSummarizedLandCoverMix(landCoverMix)
+  
+  #Create our prediction interval
+  load("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/ztreyLinearModel.RData") #named cdlModel
+  
+  currentCorn <- summarizedLandCovereMix$CDL_2022_Count[summarizedLandCovereMix$CLASS_NAME=="Corn"]
+  if (length(currentCorn) == 0) {currentCorn <- 0}
+  
+  currentSweetCorn <- summarizedLandCovereMix$CDL_2022_Count[summarizedLandCovereMix$CLASS_NAME=="Sweet Corn"]
+  if (length(currentSweetCorn) == 0) {currentSweetCorn <- 0}
+  
+  currentPotato <- summarizedLandCovereMix$CDL_2022_Count[summarizedLandCovereMix$CLASS_NAME=="Potato"]
+  if (length(currentPotato) == 0) {currentPotato <- 0}
+  
+  currentValues <- data.frame(xCorn = currentCorn, xSweetCorn = currentSweetCorn, xPotato = currentPotato)
+  currentValues <- currentValues * 9.88 #this scales from "number of contributing zones" to "area". Needed since our model is in area
+  
+  no3Prediction <- predict(cdlModel, currentValues, interval = "prediction")
+  View(no3Prediction)
+  
+  #ztrey - left off here. Combine no3Prediction and summarizedLandCoverMix into a list and pass them back up the stack.
+  #Then display the NO3 level estimation. I think add this to the Bar Chart interpretation, and just give the range
+  
   return(summarizedLandCovereMix)
 }
 
@@ -229,9 +246,10 @@ getEstimatedNitrateLevels <- function(landCoverMix) {
 createPlots <- function(estimatedNitrateLevels) {
   #Stacked bar grouping
   #t014 I've got options around: 1) should we group individual land covers? 2) should we make a pareto chart or hold specific categories in place?
+  #If I only stack some stuff, then i think color-coding the stacked stuff, and just having everything else be the same color is the way to go. No good to "double encode" with a label and color.
   estimatedNitrateLevelsStacked <- estimatedNitrateLevels %>%
     mutate(LandCoverCategory = case_when(
-      CLASS_NAME %in% c("Corn", "Potato", "Wweet Corn") ~ "High Agriculture",
+      CLASS_NAME %in% c("Corn", "Potato", "Sweet Corn") ~ "High Agriculture",
       CLASS_NAME %in% c("Deciduous Forest", "Mixed Forest", "Herbaceous Wetlands") ~ "Nature",
       TRUE ~ CLASS_NAME
     ))
