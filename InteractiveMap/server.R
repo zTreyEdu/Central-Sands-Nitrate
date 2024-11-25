@@ -24,6 +24,12 @@ function(input, output, session) {
     lat = 44.210243
   )
   
+  nO3Prediction <- reactiveValues(
+    fit = 0,
+    lwr = 0,
+    upr = 0
+  )
+  
   #Allow user to drag the map marker----
   observeEvent(input$map_marker_dragend, {
     
@@ -53,6 +59,11 @@ function(input, output, session) {
       showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
     }
+    
+    #Update Nitrate Prediction Reactive
+    nO3Prediction$fit <- nitrateEstimatorReturnList$no3Prediction$fit
+    nO3Prediction$lwr <- nitrateEstimatorReturnList$no3Prediction$lwr
+    nO3Prediction$upr <- nitrateEstimatorReturnList$no3Prediction$upr
     
     #See which of our optional features to enable
     if(dispayBufferZone == 1) {
@@ -109,7 +120,12 @@ function(input, output, session) {
     if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
       showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
-      }
+    }
+    
+    #Update Nitrate Prediction Reactive
+    nO3Prediction$fit <- nitrateEstimatorReturnList$no3Prediction$fit
+    nO3Prediction$lwr <- nitrateEstimatorReturnList$no3Prediction$lwr
+    nO3Prediction$upr <- nitrateEstimatorReturnList$no3Prediction$upr
     
     #See which of our optional features to enable
     if(dispayBufferZone == 1) {
@@ -156,8 +172,13 @@ function(input, output, session) {
            "Current marker longitude: ", displayLng, "<br>")
   })
   output$chartExplainer <- renderText({
+    no3fit <- format(round(nO3Prediction$fit, digits = 1), nsmall = 1) #internationally not using this, as it projects too much certainty
+    no3lwr <- format(round(nO3Prediction$lwr, digits = 1), nsmall = 1)
+    no3upr <- format(round(nO3Prediction$upr, digits = 1), nsmall = 1)
+    no3Units <- "mg/L"
     paste0(h2("Chart Explanation"),
-           "This bar chart shows the break down of land cover for the groundwater entry points")
+           "This bar chart shows the break down of land cover for the groundwater entry points", "<br>",
+           "Your estimated nitrate value is between ", no3lwr, " ", no3Units, " and ", no3upr, " ", no3Units)
   })
   output$externalLinks <- renderText({
     paste0(h2("Additional Info"),
