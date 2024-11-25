@@ -14,7 +14,7 @@ dashboardPage(
     ),
     fluidRow(
       box(width = 6,
-          leafletOutput(outputId = "map")
+          leafletOutput(outputId = "map", height = "500px")
           ),
       box(width = 6,
           plotOutput(outputId = "landCoverBarPlot")
