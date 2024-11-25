@@ -10,6 +10,7 @@
 #t10 - is using CRS 3070 okay?
 #t11.1 - review documentation
 #t13 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
+#t14 - determine groupings for bar chart output
 
 # -------------------Code begins here -----------------------
 
@@ -21,12 +22,14 @@
 #install.packages('dplyr')
 #install.packages('devtools')
 #install.packages('profvis')
+#install.packages("forcats")
 
 #Libraries
 library(sf)
 library(ggplot2)
 library(raster)
 library(dplyr)
+library(forcats)
 #library(devtools)
 #library(profvis)
 
@@ -224,14 +227,46 @@ getEstimatedNitrateLevels <- function(landCoverMix) {
 #' @param estimatedNitrateLevels a data frame of the landuse mix
 #' @returns a bar plot of nitrate data
 createPlots <- function(estimatedNitrateLevels) {
-  #bar plot
+  #Stacked bar grouping
+  #t014 I've got options around: 1) should we group individual land covers? 2) should we make a pareto chart or hold specific categories in place?
+  estimatedNitrateLevelsStacked <- estimatedNitrateLevels %>%
+    mutate(LandCoverCategory = case_when(
+      CLASS_NAME %in% c("Corn", "Potato", "Wweet Corn") ~ "High Agriculture",
+      CLASS_NAME %in% c("Deciduous Forest", "Mixed Forest", "Herbaceous Wetlands") ~ "Nature",
+      TRUE ~ CLASS_NAME
+    ))
+  
+  estimatedNitrateLevelsStacked <- estimatedNitrateLevelsStacked %>%
+    group_by(LandCoverCategory) %>%
+    mutate(CategoryCount = sum(CDL_2022_Relative, na.rm = TRUE)) %>%
+    ungroup()
+
+  estimatedNitrateLevelsStacked <- estimatedNitrateLevelsStacked %>%
+    mutate(LandCoverCategory = fct_reorder(LandCoverCategory, CategoryCount, .desc = TRUE))
+  
+  stackPlotTitle = "Relative Land Cover of Contributing Zones"
+  stackedBarPlot <- estimatedNitrateLevelsStacked %>%
+    ggplot(aes(x = LandCoverCategory, y = CDL_2022_Relative, fill = CLASS_NAME)) +
+    geom_bar(stat = "identity") +
+    labs(x = "Land Cover Category", y = "Percent", title = stackPlotTitle )+
+    theme(title = element_text(size = 20),
+          axis.title = element_text(size = 18),
+          axis.text.y = element_text(size = 16),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 16)) + #tilt axis labels
+    scale_y_continuous(labels = scales::label_percent())
+
+  #t14 bar plot - i can remove this if I go with the stacked bar chart
   barPlotTitle = "Relative Land Cover of Contributing Zones"
   barPlot <- ggplot(estimatedNitrateLevels, aes(x = as.factor(CLASS_NAME), y = CDL_2022_Relative)) +
     geom_bar(stat = "identity", fill = "steelblue") +
     labs(x = "Land Cover", y = "Percent", title = barPlotTitle) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + #tilt axis labels
+    theme(title = element_text(size = 20),
+          axis.title = element_text(size = 18),
+          axis.text.y = element_text(size = 16),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 16)) + #tilt axis labels
     scale_y_continuous(labels = scales::percent)
-  return(barPlot)
+  
+  return(stackedBarPlot)
 }
 
 #' Core logic for our nitrate estimator
