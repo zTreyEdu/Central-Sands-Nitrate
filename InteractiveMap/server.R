@@ -147,11 +147,13 @@ function(input, output, session) {
   
   #Pass some output text to the UI
   output$mapExplainer <- renderText({
+    displayLat <- format(round(current_marker$lat, digits = 7), nsmall = 7) #round to 7 decimal points, and format to display trailing 0s
+    displayLng <- format(round(current_marker$lng, digits = 7), nsmall = 7) #round to 7 decimal points, and format to display trailing 0s
     paste0(h2("Map Explanation"),
            "The purple dots represent simulated groundwater entry points.", "<br>",
            "The blue lines represent the modeled groundwater flow.", "<br>",
-           "Current marker latitude: ", current_marker$lat, "<br>",
-           "Current marker longitude: ", current_marker$lng, "<br>")
+           "Current marker latitude: ", displayLat, "<br>",
+           "Current marker longitude: ", displayLng, "<br>")
   })
   output$chartExplainer <- renderText({
     paste0(h2("Chart Explanation"),
