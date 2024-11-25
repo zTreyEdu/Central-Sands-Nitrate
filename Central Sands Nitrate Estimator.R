@@ -210,34 +210,37 @@ getSummarizedLandCoverMix <- function(landCoverMix) {
 #' Calculates the estimated nitrate levels given a land cover mix
 #' t15
 #' @param landCoverMix a data frame with one row per particle IDs and a column for land cover
-#' @return ???
+#' @returns a list with the following structure:
+#'            summarizedLandCoverMix - a data frame with one row per land cover and columns for the amount of each land cover
+#'            no3Prediction - a data frame with the no3 prediction. It has the fit value, as well as the prediction interval lower and upper bound
 getEstimatedNitrateLevels <- function(landCoverMix) {
   #Get our Summarized Land Cover Mix
   #
-  summarizedLandCovereMix <- getSummarizedLandCoverMix(landCoverMix)
+  summarizedLandCoverMix <- getSummarizedLandCoverMix(landCoverMix)
   
   #Create our prediction interval
   load("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/ztreyLinearModel.RData") #named cdlModel
   
-  currentCorn <- summarizedLandCovereMix$CDL_2022_Count[summarizedLandCovereMix$CLASS_NAME=="Corn"]
+  currentCorn <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Corn"]
   if (length(currentCorn) == 0) {currentCorn <- 0}
   
-  currentSweetCorn <- summarizedLandCovereMix$CDL_2022_Count[summarizedLandCovereMix$CLASS_NAME=="Sweet Corn"]
+  currentSweetCorn <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Sweet Corn"]
   if (length(currentSweetCorn) == 0) {currentSweetCorn <- 0}
   
-  currentPotato <- summarizedLandCovereMix$CDL_2022_Count[summarizedLandCovereMix$CLASS_NAME=="Potato"]
+  currentPotato <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Potato"]
   if (length(currentPotato) == 0) {currentPotato <- 0}
   
   currentValues <- data.frame(xCorn = currentCorn, xSweetCorn = currentSweetCorn, xPotato = currentPotato)
   currentValues <- currentValues * 9.88 #this scales from "number of contributing zones" to "area". Needed since our model is in area
   
-  no3Prediction <- predict(cdlModel, currentValues, interval = "prediction")
-  View(no3Prediction)
+  no3Prediction <- predict.lm(cdlModel, currentValues, interval = "prediction", level = 0.95)
   
   #ztrey - left off here. Combine no3Prediction and summarizedLandCoverMix into a list and pass them back up the stack.
   #Then display the NO3 level estimation. I think add this to the Bar Chart interpretation, and just give the range
   
-  return(summarizedLandCovereMix)
+  estimatedNitrateLevelsReturnList <- list(summarizedLandCoverMix = summarizedLandCoverMix, no3Prediction = no3Prediction)
+  
+  return(estimatedNitrateLevelsReturnList)
 }
 
 #' Create a bar plot
@@ -298,7 +301,7 @@ createPlots <- function(estimatedNitrateLevels) {
 #'            floIDs: a data frame of FLO IDs that intersect with our selected buffer zone
 #'            landCover: Land Cover fraction of all of the contributing zones
 #'            bufferZone: a polygon of our buffer zone
-#'            Index X: Estimated nitrate level (Note: not yet added in)
+#'            no3Prediction: Estimated nitrate level
 runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
   #Find contributing FLOs and STPs for the coordinates of interest
   contribSTPsForCoordReturnList <- getContribSTPsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
@@ -310,10 +313,12 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   landCoverMix <- getLandCoverMix(stpDataSet, contribSTPIDs, timeFrameOfInterest)
   
   # Find the estimated nitrogen impacts given the land use
-  estimatedNitrateLevels <- getEstimatedNitrateLevels(landCoverMix)
+  estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevels(landCoverMix)
+  landCoverSummary <- estimatedNitrateLevelsReturnList$summarizedLandCover
+  no3Prediction <- estimatedNitrateLevelsReturnList$no3Prediction
   
   # Organize and return data
-  nitrateEstimatorReturnList <- list(stpIDs = contribSTPIDs, floIDs = contribFLOIDs,landCover = estimatedNitrateLevels, bufferZone = bufferZone)
+  nitrateEstimatorReturnList <- list(stpIDs = contribSTPIDs, floIDs = contribFLOIDs,landCover = landCoverSummary, bufferZone = bufferZone, no3Prediction = no3Prediction)
   return(nitrateEstimatorReturnList)
 }
 
@@ -334,5 +339,6 @@ mainNitrateEstimator <- function() {
   nitrateEstimatorReturnList <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
   plots <- createPlots(nitrateEstimatorReturnList$landCover)
   print(plots)
+  print(nitrateEstimatorReturnList$no3Prediction)
 }
 
