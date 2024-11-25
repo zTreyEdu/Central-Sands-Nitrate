@@ -227,13 +227,15 @@ getEstimatedNitrateLevels <- function(landCoverMix) {
   currentSweetCorn <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Sweet Corn"]
   if (length(currentSweetCorn) == 0) {currentSweetCorn <- 0}
   
-  currentPotato <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Potato"]
+  currentPotato <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Potatoes"]
   if (length(currentPotato) == 0) {currentPotato <- 0}
   
   currentValues <- data.frame(xCorn = currentCorn, xSweetCorn = currentSweetCorn, xPotato = currentPotato)
   currentValues <- currentValues * 9.88 #this scales from "number of contributing zones" to "area". Needed since our model is in area
   
   no3Prediction <- predict.lm(cdlModel, currentValues, interval = "prediction", level = 0.95)
+  
+  no3Prediction <- as.data.frame(no3Prediction) #convert to data frame for easier handling later on
   
   #ztrey - left off here. Combine no3Prediction and summarizedLandCoverMix into a list and pass them back up the stack.
   #Then display the NO3 level estimation. I think add this to the Bar Chart interpretation, and just give the range
@@ -252,7 +254,7 @@ createPlots <- function(estimatedNitrateLevels) {
   #If I only stack some stuff, then i think color-coding the stacked stuff, and just having everything else be the same color is the way to go. No good to "double encode" with a label and color.
   estimatedNitrateLevelsStacked <- estimatedNitrateLevels %>%
     mutate(LandCoverCategory = case_when(
-      CLASS_NAME %in% c("Corn", "Potato", "Sweet Corn") ~ "High Agriculture",
+      CLASS_NAME %in% c("Corn", "Potatoes", "Sweet Corn") ~ "High Agriculture",
       CLASS_NAME %in% c("Deciduous Forest", "Mixed Forest", "Herbaceous Wetlands") ~ "Nature",
       TRUE ~ CLASS_NAME
     ))
@@ -269,7 +271,7 @@ createPlots <- function(estimatedNitrateLevels) {
   stackedBarPlot <- estimatedNitrateLevelsStacked %>%
     ggplot(aes(x = LandCoverCategory, y = CDL_2022_Relative, fill = CLASS_NAME)) +
     geom_bar(stat = "identity") +
-    labs(x = "Land Cover Category", y = "Percent", title = stackPlotTitle )+
+    labs(x = "Land Cover Category", y = "Percent", title = stackPlotTitle, fill = "Land Cover") +
     theme(title = element_text(size = 20),
           axis.title = element_text(size = 18),
           axis.text.y = element_text(size = 16),
