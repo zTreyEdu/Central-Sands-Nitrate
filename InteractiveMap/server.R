@@ -178,7 +178,7 @@ function(input, output, session) {
     no3Units <- "mg/L"
     paste0(h2("Chart Explanation"),
            "This bar chart shows the break down of land cover for the groundwater entry points", "<br>",
-           "Your estimated nitrate value is between ", no3lwr, " ", no3Units, " and ", no3upr, " ", no3Units)
+           "The nitrate level for the region you selected is likely between ", no3lwr, " ", no3Units, " and ", no3upr, " ", no3Units)
   })
   output$externalLinks <- renderText({
     paste0(h2("Additional Info"),
