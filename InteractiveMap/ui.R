@@ -18,7 +18,9 @@ dashboardPage(
           ),
       box(width = 6,
           plotOutput(outputId = "landCoverBarPlot")
-          )
+          ),
+      box(width = 6,
+          plotOutput(outputId = "flowTimeHistogram"))
       ),
       fluidRow(
         box(htmlOutput("takeAction")),

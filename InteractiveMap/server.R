@@ -53,6 +53,7 @@ function(input, output, session) {
     #Update our UI with our Nitrate Plot
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
     output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
+    output$flowTimeHistogram <- renderPlot({nitrateEstimatorReturnList$flowTimeHistogram})
     
     #If our buffer zone didn't have any FLO intersections, then let the user know and quit out of this function
     if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
@@ -115,6 +116,7 @@ function(input, output, session) {
     #Update our UI with our Nitrate Plot
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
     output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
+    output$flowTimeHistogram <- renderPlot({nitrateEstimatorReturnList$flowTimeHistogram})
     
     #If our buffer zone didn't have any FLO interesections, then let the user know and quit out of this function
     if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
@@ -166,6 +168,7 @@ function(input, output, session) {
     displayLat <- format(round(current_marker$lat, digits = 7), nsmall = 7) #round to 7 decimal points, and format to display trailing 0s
     displayLng <- format(round(current_marker$lng, digits = 7), nsmall = 7) #round to 7 decimal points, and format to display trailing 0s
     paste0(h2("Map Explanation"),
+           "Click or drag the marker within the bounded region to get estimated land use from groundwater contributing zones.", "<br>",
            "The purple dots represent simulated groundwater entry points.", "<br>",
            "The blue lines represent the modeled groundwater flow.", "<br>",
            "Current marker latitude: ", displayLat, "<br>",

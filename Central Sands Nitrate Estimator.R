@@ -343,10 +343,42 @@ getEstimatedNitrateLevels <- function(landCoverMix) {
   return(estimatedNitrateLevelsReturnList)
 }
 
+#' Creates a histogram for the time to center for each of the FLOs
+#' @param floTimes a data frame of flow times
+#' @returns a histogram
+createFlowTimeHistogram <- function(floTimes) {
+  flowTimeHistogram <- floTimes %>%
+    ggplot(aes(x = time_to_center)) +
+    geom_histogram(fill = "blue", color = "black") +
+    theme_minimal() +
+    labs(title = "Distribution of groundwater flow times from contributing zone to selected region",
+         x = "Time",
+         y = "frequency")
+  return(flowTimeHistogram)
+}
+
+#' Wrapper function to create various plots
+#' @param nitrateEstimatorReturnList a list of other objects that stores information to plot
+#' @returns nitrateEstimatorReturnList with a few additional indices:
+#'                        landCoverPlot - a stacked bar chart of the contributing zone land cover
+#'                        flowTimeHistogram - a histogram of the flow times
+createPlots <- function(nitrateEstimatorReturnList) {
+  #Create our plots
+  landCoverBarPlot <- createLandCoverPlot(nitrateEstimatorReturnList$landCover)
+  flowTimeHistogram <- createFlowTimeHistogram(nitrateEstimatorReturnList$floIDs)
+  
+  #add them to our return list
+  nitrateEstimatorReturnList$landCoverBarPlot <- landCoverBarPlot
+  nitrateEstimatorReturnList$flowTimeHistogram <- flowTimeHistogram
+  
+  #output
+  return(nitrateEstimatorReturnList)
+}
+
 #' Create a bar plot
 #' @param estimatedNitrateLevels a data frame of the landuse mix
 #' @returns a bar plot of nitrate data
-createPlots <- function(estimatedNitrateLevels) {
+createLandCoverPlot <- function(estimatedNitrateLevels) {
   #Stacked bar grouping
   #t014 I've got options around: 1) should we group individual land covers? 2) should we make a pareto chart or hold specific categories in place?
   #If I only stack some stuff, then i think color-coding the stacked stuff, and just having everything else be the same color is the way to go. No good to "double encode" with a label and color.
@@ -437,8 +469,9 @@ mainNitrateEstimator <- function() {
   
   # ----2.3 Find Nitrate Estimates----
   nitrateEstimatorReturnList <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
-  plots <- createPlots(nitrateEstimatorReturnList$landCover)
-  print(plots)
+  nitrateEstimatorReturnList <- createPlots(nitrateEstimatorReturnList)
+  print(nitrateEstimatorReturnList$landCoverBarPlot)
+  print(nitrateEstimatorReturnList$flowTimeHistogram)
   print(nitrateEstimatorReturnList$no3Prediction)
 }
 
