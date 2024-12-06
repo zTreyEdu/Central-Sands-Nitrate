@@ -24,6 +24,7 @@
 #install.packages('devtools')
 #install.packages('profvis')
 #install.packages("forcats")
+#install.pakcages("tidyr")
 
 #Libraries
 library(sf)
@@ -31,6 +32,8 @@ library(ggplot2)
 library(raster)
 library(dplyr)
 library(forcats)
+library(lwgeom)
+library(tidyr)
 #library(devtools)
 #library(profvis)
 
@@ -126,6 +129,100 @@ getStpDataSet <- function() {
   return(stpDataSet)
 }
 
+#' given a data frame of SFs, a row, and a column, return a numeric value from a cell
+#' @param dataFrame a dataframe of SF objects
+#' @param rowIx the row index to look up
+#' @param columnName the name of the column to look up
+#' @returns the value as a numeric data type
+getNumValueFromSFDF <- function(dataFrame, rowIx, columnName) {
+  cellValue <- dataFrame[rowIx, columnName]
+  cellValueNumeric <- cellValue %>%
+    st_drop_geometry() %>%
+    as.numeric()
+  return(cellValueNumeric)
+}
+
+#' Given a data from of split FLOs, find the length and travel time of each segment
+#' @param floSet an FLO data frame
+#' @returns floSet with a column for FLO segment length and a column for segment travel time
+getFLOSegmentLengths <- function(floSet) {
+  floSet <- floSet %>%
+    mutate(segment_length = st_length(geometry)) %>% #returns length with units stored as an attribute, so split those out
+    mutate(segment_length = as.numeric(segment_length)) %>%
+    mutate(segment_time = ((segment_length / total_length) * time))
+  return(floSet)
+}
+
+#' Given a data frame of FLOs, find the length of each line and split the units out into a separate column
+#' @param floSet an FLO data frame
+#' @returns floSet with a column for FLO length and a column for the units
+getFLOTotalLengths <- function(floSet) {
+  #Create our total length column
+  floSet <- floSet %>%
+    mutate(total_length = st_length(geometry))
+  
+  #Split it into two columns
+  floSet <- floSet %>%
+    mutate(length_units = as.character(units(floSet$total_length))) %>%
+    mutate(total_length = as.numeric(total_length))
+  
+  return(floSet)
+}
+
+#' Get the time it takes for the FLOs to reach the middle of the selected region
+#' @param floSet a data frame of FLOs
+#' @param coordBufferZone the buffer zone of our selected point
+#' @returns the floSet with a column for how long it takes the ground water to reach the middle of the selected region
+getFLOTimes <- function(floSet, coordBufferZone) {
+  #Get the total length of the FLOs
+  floSet <- getFLOTotalLengths(floSet)
+
+  #Split the FLOs into 3 sections based on where they intersect the buffer zone: 1) before intersecting, 2) inside the buffer, 3) after the buffer
+  #Stictly speaking, it's possible something just touched the buffer without going inside (e.g., a tangent line), in which case we'll only have it split into 2.
+  #This is a rare scenario, but we'll handle it regardless
+  floSplitSet <- st_split(floSet, coordBufferZone)
+  
+  #Extract the output of st_split into something we can work with
+  floExtractSet <- st_collection_extract(floSplitSet, type = "LINESTRING")
+
+  floExtractSet <- getFLOSegmentLengths(floExtractSet)
+
+  
+  #Initialize a data frame to store our results
+  newColNames <- c("time_to_center")
+  floRowCount <- nrow(floSet)
+  floTimes <- data.frame(matrix(ncol = length(newColNames), nrow = floRowCount))
+  colnames(floTimes) <- newColNames
+  
+  #Find our time to center of the buffer zone
+  #Note: the "center", in this case, is simply the mid-point of the line inside the buffer zone, not the exact center of the circle
+  for(floIndex in 1:floRowCount){
+    partIDLoc <- getNumValueFromSFDF(floSet, floIndex, "conversion_to_partidloc_")
+    floSegments <- floExtractSet[floExtractSet$conversion_to_partidloc_ == partIDLoc, ]
+    
+    #Get the length of our 1st segment
+    segment1Length <- getNumValueFromSFDF(floSegments, 1, "segment_length")
+    
+    #3 Segments
+    if(nrow(floSegments) == 3) {
+      segment2Length <- getNumValueFromSFDF(floSegments, 2, "segment_length")
+      distToCenter <- (segment1Length + (segment2Length/2)) #We'll say the distance to the center is the length of the first segment plus have the length of the segment inside the buffer zone. It's imperfect, but a decent approximation
+    } else { #2 Segments, or any other weird scenarios
+      distToCenter <- segment1Length #if we don't have 3 segments, just default to only the length of the first segment
+    }
+    
+    totalFLOTime <- getNumValueFromSFDF(floSegments, 1, "time") #the time and total length columns are the same for all, so just pull from row 1
+    totalFLOLength <- getNumValueFromSFDF(floSegments, 1, "total_length")
+
+    timeToCenter <- (totalFLOTime * (distToCenter / totalFLOLength))
+    
+    floTimes[floIndex,"time_to_center"] <- timeToCenter 
+  }
+  
+  floSet <- cbind(floSet, floTimes)
+  return(floSet)
+}
+
 #' Finds the flow lines that intersect with our buffer zone
 #' @param coordBufferZone a polygon object for the buffer zone in question 
 #' @param floDataSet linestring objects, flow lines from our MODPATH model output
@@ -133,6 +230,7 @@ getStpDataSet <- function() {
 getFLOsInBufferZone <- function(coordBufferZone, floDataSet) {
   intersections <- st_intersects(coordBufferZone, floDataSet)
   flosInBufferZone <- floDataSet[intersections[[1]], ]
+  flosInBufferZone <- getFLOTimes(flosInBufferZone, coordBufferZone)
   return(flosInBufferZone)
 }
 
