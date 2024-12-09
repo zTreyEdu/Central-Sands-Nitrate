@@ -1,5 +1,8 @@
 #Purpose: code for the UI for the Interactive Map, a shiny app
 #
+#install.packages("shinycssloaders")
+library(shinycssloaders)
+
 # Define UI for application
 dashboardPage(
   dashboardHeader(disable = TRUE),
@@ -10,8 +13,9 @@ dashboardPage(
           htmlOutput("mapExplainer")
           ),
       box(width = 6,
-          htmlOutput("chartExplainer"))
-    ),
+          htmlOutput("chartExplainer")
+          )
+      ),
     fluidRow(
       box(width = 6,
           leafletOutput(outputId = "map", height = "500px")
@@ -20,8 +24,9 @@ dashboardPage(
           plotOutput(outputId = "landCoverBarPlot")
           ),
       box(width = 6,
-          plotOutput(outputId = "flowTimeHistogram"))
-    ),
+          plotOutput(outputId = "flowTimeHistogram")
+          )
+      ),
     fluidRow(
       box(htmlOutput("takeAction")),
       box(htmlOutput("externalLinks"))
