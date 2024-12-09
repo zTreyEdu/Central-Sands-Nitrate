@@ -185,17 +185,36 @@ function(input, output, session) {
   })
   output$externalLinks <- renderText({
     paste0(h2("Additional Info"),
-           "* ", a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency"), "<br>",
-           "* ", a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education"), "<br>",
-           "* Learn about the modeling software used: ",
-           a(href = "https://www.usgs.gov/mission-areas/water-resources/science/modflow-and-related-programs", "MODFLOW"),
-           " and ",
-           a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH"))
+           tags$li(a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency")),
+           tags$li(a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education")),
+           tags$li("Learn about the modeling software used: "),
+           tags$ul(
+             tags$li(a(href = "https://www.usgs.gov/mission-areas/water-resources/science/modflow-and-related-programs", "MODFLOW")),
+             tags$li(a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH"))
+             )
+           )
   })
   output$takeAction <- renderText({
     paste0(h2("Action"),
            "If your well has a high percentage of agricultural contributing zones, we recommend you test your well at least once a --time--.",
            "You can order a test here: --link out to website to order testing--"
+           )
+  })
+  
+  output$modelAssumptions <- renderText({
+    paste0(h2("Model Assumptions"),
+           "There are many assumptions that go into the Nitrate estimates from this model. This model makes the following assumptions and simplifications:",
+           tags$li("It assumes uniform nitrate application in an area."),
+           tags$li("It assumes land cover is an exact proxy for nitrate application."),
+           tags$li("It assumes land cover has remained constant over time."),
+           tags$li("It does not account  for the time or distance of the groundwater flow."),
+           tags$li("It does not account for groundwater depth."),
+           tags$li("It assumes CropScape is accurate."),
+           tags$li("It only uses groundwater as a predictor, and does not account for the effects of precipitation or runoff."),
+           tags$li("It assumes a constant soil porosity and does not account for different soil types."),
+           tags$li("It assumes steady-state nitrate application and groundwater flow."),
+           tags$li("Only the land cover of the contributing points is considered; land cover in between the contributing zones and selected regions is not accounted for."),
+           tags$li("The selected region is buffered to a circle with a 100 meter radius.")
            )
   })
 }

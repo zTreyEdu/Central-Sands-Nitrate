@@ -21,11 +21,15 @@ dashboardPage(
           ),
       box(width = 6,
           plotOutput(outputId = "flowTimeHistogram"))
-      ),
-      fluidRow(
-        box(htmlOutput("takeAction")),
-        box(htmlOutput("externalLinks"))
-        )
+    ),
+    fluidRow(
+      box(htmlOutput("takeAction")),
+      box(htmlOutput("externalLinks"))
+    ),
+    fluidRow(
+      box(width = 6,
+          htmlOutput("modelAssumptions"))
+    )
     ),
   title = "Interactive Groundwater Flow Map"
 )
