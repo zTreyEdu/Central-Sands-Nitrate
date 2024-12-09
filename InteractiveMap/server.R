@@ -185,12 +185,14 @@ function(input, output, session) {
   })
   output$externalLinks <- renderText({
     paste0(h2("Additional Info"),
-           tags$li(a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency")),
-           tags$li(a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education")),
-           tags$li("Learn about the modeling software used: "),
            tags$ul(
-             tags$li(a(href = "https://www.usgs.gov/mission-areas/water-resources/science/modflow-and-related-programs", "MODFLOW")),
-             tags$li(a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH"))
+             tags$li(a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency")),
+             tags$li(a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education")),
+             tags$li("Learn about the modeling software used: "),
+             tags$ul(
+               tags$li(a(href = "https://www.usgs.gov/mission-areas/water-resources/science/modflow-and-related-programs", "MODFLOW")),
+               tags$li(a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH"))
+               )
              )
            )
   })
