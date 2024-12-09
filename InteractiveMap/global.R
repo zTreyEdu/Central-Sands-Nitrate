@@ -62,7 +62,7 @@ getRegionData <- function(pathLineBoundary, marker) {
 #'Given a longitude and latitude, generate a info about up gradient land cover
 #' @param longitude a longitude
 #' @param latitude a latitude
-#' @returns a list of return values. View runNitrateEstimator for list structure
+#' @returns a list of return values. View runNitrateEstimator and createPlots for list structure
 generateNitrateEstimates <- function(longitude, latitude) {
   selectedCoords <- createSFPoint(longitude, latitude)
   nitrateEstimatorReturnList <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
