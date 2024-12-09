@@ -10,7 +10,6 @@
 #t10 - is using CRS 3070 okay?
 #t11.1 - review documentation
 #t13 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
-#t14 - determine groupings for bar chart output
 #15 - add proper prediction equation and clean up getEstimatedNitrateLevels
 
 # -------------------Code begins here -----------------------
@@ -66,8 +65,10 @@ createSFPoint <- function(xCoord, yCoord) {
 #' Coordinates are currently hard-coded, but could be modified to allow for front-end user input
 #' @returns coordinates stored as an SF Point Object
 getCoordsOfInterest <- function() {
-  xCoord <- -89.3551954
-  yCoord <- 44.4980914
+  #xCoord <- -89.3551954
+  #yCoord <- 44.4980914
+  xCoord <- -89.6168518
+  yCoord <- 44.1309709
   coords <- createSFPoint(xCoord, yCoord)
   return(coords)
 }
@@ -347,13 +348,20 @@ getEstimatedNitrateLevels <- function(landCoverMix) {
 #' @param floTimes a data frame of flow times
 #' @returns a histogram
 createFlowTimeHistogram <- function(floTimes) {
+  #Prepare our data
+  floTimes <- floTimes %>%
+    mutate(time_in_years = (time_to_center / 365.24))
+  
+  #Create our histogram
   flowTimeHistogram <- floTimes %>%
-    ggplot(aes(x = time_to_center)) +
+    ggplot(aes(x = time_in_years)) +
     geom_histogram(fill = "blue", color = "black") +
-    theme_minimal() +
-    labs(title = "Distribution of groundwater flow times from contributing zone to selected region",
-         x = "Time",
-         y = "frequency")
+    labs(title = "Flow times from contributing zones to selected region",
+         x = "Ground Water Flow Times (years)",
+         y = "Frequency") +
+    theme(title = element_text(size = 20),
+          axis.title = element_text(size = 18),
+          axis.text.y = element_text(size = 16))
   return(flowTimeHistogram)
 }
 
@@ -408,17 +416,6 @@ createLandCoverPlot <- function(estimatedNitrateLevels) {
           axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 16)) + #tilt axis labels
     scale_y_continuous(labels = scales::label_percent())
 
-  #t14 bar plot - i can remove this if I go with the stacked bar chart
-  barPlotTitle = "Relative Land Cover of Contributing Zones"
-  barPlot <- ggplot(estimatedNitrateLevels, aes(x = as.factor(CLASS_NAME), y = CDL_2022_Relative)) +
-    geom_bar(stat = "identity", fill = "steelblue") +
-    labs(x = "Land Cover", y = "Percent", title = barPlotTitle) +
-    theme(title = element_text(size = 20),
-          axis.title = element_text(size = 18),
-          axis.text.y = element_text(size = 16),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 16)) + #tilt axis labels
-    scale_y_continuous(labels = scales::percent)
-  
   return(stackedBarPlot)
 }
 
