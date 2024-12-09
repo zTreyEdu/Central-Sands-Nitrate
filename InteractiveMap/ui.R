@@ -1,7 +1,6 @@
 #Purpose: code for the UI for the Interactive Map, a shiny app
 #
-#install.packages("shinycssloaders")
-library(shinycssloaders)
+
 
 # Define UI for application
 dashboardPage(
@@ -30,11 +29,11 @@ dashboardPage(
     fluidRow(
       box(htmlOutput("takeAction")),
       box(htmlOutput("externalLinks"))
-    ),
+      ),
     fluidRow(
       box(width = 6,
           htmlOutput("modelAssumptions"))
-    )
+      )
     ),
   title = "Interactive Groundwater Flow Map"
 )

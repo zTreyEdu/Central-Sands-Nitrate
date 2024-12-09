@@ -33,6 +33,9 @@ function(input, output, session) {
   #Allow user to drag the map marker----
   observeEvent(input$map_marker_dragend, {
     
+    #Show a spinner to let the user know that something is happening
+    showPageSpinner(caption = "Calculating...")
+    
     #Check that the marker is in bounds---
     regionData <- getRegionData(pathLineBoundary = pathLineBoundary,
                       marker = data.frame(lat = input$map_marker_dragend$lat, lng = input$map_marker_dragend$lng))
@@ -98,11 +101,16 @@ function(input, output, session) {
                          color = "orange",
                          radius = 5)
     }
-
+    
+    #Remove spinner
+    hidePageSpinner()
   })
   
   #Alternatively, allow user to click on the map----
   observeEvent(input$map_shape_click, {
+    #Show a spinner to let the user know that something is happening
+    showPageSpinner(caption = "Calculating...")
+    
     #Clear existing markers and shapes, and update map with new marker location
     current_marker$lat <- input$map_shape_click$lat
     current_marker$lng <- input$map_shape_click$lng
@@ -161,6 +169,9 @@ function(input, output, session) {
                          color = "orange",
                          radius = 5)
     }
+    
+    #Remove spinner
+    hidePageSpinner()
   })
   
   #Pass some output text to the UI
@@ -175,7 +186,7 @@ function(input, output, session) {
            "Current marker longitude: ", displayLng, "<br>")
   })
   output$chartExplainer <- renderText({
-    no3fit <- format(round(nO3Prediction$fit, digits = 1), nsmall = 1) #internationally not using this, as it projects too much certainty
+    no3fit <- format(round(nO3Prediction$fit, digits = 1), nsmall = 1) #intentionally not using the point estimate prediction, as it projects too much certainty
     no3lwr <- format(round(nO3Prediction$lwr, digits = 1), nsmall = 1)
     no3upr <- format(round(nO3Prediction$upr, digits = 1), nsmall = 1)
     no3Units <- "mg/L"

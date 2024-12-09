@@ -7,6 +7,7 @@
 #install.packages('leaflet.extras2')
 #install.packages("dplyer")
 #install.packages("shinydashboard")
+#install.packages("shinycssloaders")
 
 #Libraries
 library(sf)
@@ -15,6 +16,7 @@ library(leaflet)
 library(leaflet.extras2)
 library(dplyr)
 library(shinydashboard)
+library(shinycssloaders)
 
 source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Central Sands Nitrate Estimator.R")
 
