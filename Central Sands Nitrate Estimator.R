@@ -406,7 +406,7 @@ createLandCoverPlot <- function(estimatedNitrateLevels) {
   estimatedNitrateLevelsStacked <- estimatedNitrateLevelsStacked %>%
     mutate(LandCoverCategory = fct_reorder(LandCoverCategory, CategoryCount, .desc = TRUE))
   
-  stackPlotTitle = "Relative Land Cover of Contributing Zones"
+  stackPlotTitle = "Current Land Cover of Contributing Zones"
   stackedBarPlot <- estimatedNitrateLevelsStacked %>%
     ggplot(aes(x = LandCoverCategory, y = CDL_2022_Relative, fill = CLASS_NAME)) +
     geom_bar(stat = "identity") +
