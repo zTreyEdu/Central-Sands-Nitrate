@@ -35,7 +35,7 @@ dashboardPage(
           htmlOutput("modelAssumptions")
           ),
       box(width = 6,
-          tableOutput("flowlineInfoTable"))
+          dataTableOutput("flowlineInfoTable"))
       )
     ),
   title = "Interactive Groundwater Flow Map"

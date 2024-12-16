@@ -30,8 +30,6 @@ function(input, output, session) {
     upr = 0
   )
   
-  floInfoTable <- reactiveVal(data.frame())
-  
   #Allow user to drag the map marker----
   observeEvent(input$map_marker_dragend, {
     
@@ -59,6 +57,14 @@ function(input, output, session) {
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
     output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
     output$flowTimeHistogram <- renderPlot({nitrateEstimatorReturnList$flowTimeHistogram})
+    
+    testFLODF <- as.data.frame(nitrateEstimatorReturnList$floIDs)
+    output$flowlineInfoTable <- renderDataTable({testFLODF[ ,1:8]})
+    
+    #TODO
+    #ztrey left off here - testing for flo output table. I've got the framework for outputting a data frame
+    #but two issues need resolved: 1) good way to strip out SF data class, and 2) good way to strip out the geometry column (it's a list column, which breaks the table display)
+    
     
     #If our buffer zone didn't have any FLO intersections, then let the user know and quit out of this function
     if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
@@ -128,18 +134,13 @@ function(input, output, session) {
     output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
     output$flowTimeHistogram <- renderPlot({nitrateEstimatorReturnList$flowTimeHistogram})
     
+    testFLODF <- as.data.frame(nitrateEstimatorReturnList$floIDs)
+    output$flowlineInfoTable <- renderDataTable({testFLODF[ ,1:8]})
+    
     #TODO
-    #ztrey left off here - testing for flo output table. I think i've got the framework for outputting a data frame
-    #but i was gettign errors when i tried to pass nitrateEstimatorReturnList$floIDs, my guess is that it might be due to SF class
-    #next step: tinker with updates to nitrateEstimatorReturnList$floIDs to see what it takes to output correctly. Not sure if it'll make sense to
-    #do these at the source or as a separate function in this routine, but deal with that as needed. I'll defo need to strip out (and possibly add)
-    #columns to floIDs, so might just be worth doing it all here.
-    newData <- data.frame(
-      Name = c("John", "Jane", "Doe"),
-      Age = c(28, 34, 45),
-      Occupation = c("Engineer", "Doctor", "Artist")
-    )
-    floInfoTable(newData)
+    #ztrey left off here - testing for flo output table. I've got the framework for outputting a data frame
+    #but two issues need resolved: 1) good way to strip out SF data class, and 2) good way to strip out the geometry column (it's a list column, which breaks the table display)
+
     
     #If our buffer zone didn't have any FLO interesections, then let the user know and quit out of this function
     if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
@@ -244,8 +245,5 @@ function(input, output, session) {
            tags$li("Only the land cover of the contributing points is considered; land cover in between the contributing zones and selected regions is not accounted for."),
            tags$li("The selected region is buffered to a circle with a 100 meter radius.")
            )
-  })
-  output$flowlineInfoTable <- renderTable({
-    floInfoTable()
   })
 }
