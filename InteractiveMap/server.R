@@ -12,10 +12,17 @@ function(input, output, session) {
       addLayersControl(baseGroups = c("Default", "Aerial", "Terrain"),
                        options = layersControlOptions(collapsed = TRUE)) %>% #Add toggle-able base layers
       addPolygons(data = pathLineBoundary,
+                  group = "static",
                   color = "black",
                   fillColor = ~fill_color,
                   fillOpacity = 0.7) %>% #adds our pathLineBoundary shape
-      addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE)) #create a moveable map marker
+      addCircleMarkers(data = pumpingWells,
+                       radius = 5,
+                       group = "static",
+                       color = "blue",
+                       fillColor = "green",
+                       fillOpacity = 0.7) %>% #add pumpingWells shape
+      addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE), group = "dynamic") #create a moveable map marker
   })
   
   #Set up our reactive values----
@@ -48,10 +55,9 @@ function(input, output, session) {
 
     #Update the map with our new marker locations
     leafletProxy(mapId = "map") %>%
-      clearMarkers() %>%
       clearGroup("dynamic") %>% #only clear shapes we're drawing for each point, and keep our static border shape
       addMarkers(data = data.frame(lat = current_marker$lat, lng = current_marker$lng),
-                 options = markerOptions(draggable = TRUE))
+                 options = markerOptions(draggable = TRUE), group = "dynamic")
 
     #Update our UI with our Nitrate Plot
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
@@ -104,6 +110,7 @@ function(input, output, session) {
       stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
       leafletProxy(mapId = "map") %>%
         addCircleMarkers(data = stpCoords,
+                         group = "dynamic",
                          lng = ~lng,
                          lat = ~lat,
                          color = "orange",
@@ -124,10 +131,9 @@ function(input, output, session) {
     current_marker$lng <- input$map_shape_click$lng
 
     leafletProxy(mapId = "map") %>%
-      clearMarkers() %>%
       clearGroup("dynamic") %>% #only clear shapes we're drawing for each point, and keep our static border shape
       addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
-                 options = markerOptions(draggable = TRUE))
+                 options = markerOptions(draggable = TRUE), group = "dynamic")
     
     #Update our UI with our Nitrate Plot
     nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
@@ -180,6 +186,7 @@ function(input, output, session) {
       stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
       leafletProxy(mapId = "map") %>%
         addCircleMarkers(data = stpCoords,
+                         group = "dynamic",
                          lng = ~lng,
                          lat = ~lat,
                          color = "orange",

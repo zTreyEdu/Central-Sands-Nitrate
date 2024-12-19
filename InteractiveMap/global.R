@@ -33,10 +33,14 @@ buffer <- getBuffer()
 floDataSet <- getFloDataSet()
 stpDataSet <- getStpDataSet()
 
-#Create a boundary line for our MODPATH model----
+#Create a boundary line for our MODPATH model (polygon data)----
 pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/prelim_ff_model_bounds_proposed.shp")
 pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
   mutate(fill_color = "#1C00ff00")
+
+#read in wells (point data)----
+pumpingWells <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/pumping_well_pts.shp")
+pumpingWells <- st_transform(pumpingWells, crs = 4326)
 
 #Define functions----
 
