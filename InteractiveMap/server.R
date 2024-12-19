@@ -9,19 +9,21 @@ function(input, output, session) {
       addProviderTiles("Esri.WorldImagery", group = "Aerial") %>% #Aerial Photo Base Layer
       addProviderTiles("Stadia.StamenTerrain", group = "Terrain") %>%
       addProviderTiles("OpenStreetMap.Mapnik", group = "Default") %>% #Default Base Layer
+      addCircleMarkers(data = pumpingWells,
+                  group = "Pumping Wells",
+                  radius = 5,
+                  color = "blue",
+                  fillColor = "green",
+                  fillOpacity = 0.7) %>%
+      hideGroup("Pumping Wells") %>%
       addLayersControl(baseGroups = c("Default", "Aerial", "Terrain"),
+                       overlayGroups = c("Pumping Wells"),
                        options = layersControlOptions(collapsed = TRUE)) %>% #Add toggle-able base layers
       addPolygons(data = pathLineBoundary,
                   group = "static",
                   color = "black",
                   fillColor = ~fill_color,
                   fillOpacity = 0.7) %>% #adds our pathLineBoundary shape
-      addCircleMarkers(data = pumpingWells,
-                       radius = 5,
-                       group = "static",
-                       color = "blue",
-                       fillColor = "green",
-                       fillOpacity = 0.7) %>% #add pumpingWells shape
       addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE), group = "dynamic") #create a moveable map marker
   })
   
@@ -36,6 +38,8 @@ function(input, output, session) {
     lwr = 0,
     upr = 0
   )
+  
+
   
   #Allow user to drag the map marker----
   observeEvent(input$map_marker_dragend, {
