@@ -16,13 +16,13 @@ dashboardPage(
           )
       ),
     fluidRow(
-      box(width = 6,
+      box(width = 4,
           leafletOutput(outputId = "map", height = "500px")
           ),
-      box(width = 6,
+      box(width = 4,
           plotOutput(outputId = "landCoverBarPlot")
           ),
-      box(width = 6,
+      box(width = 4,
           plotOutput(outputId = "flowTimeHistogram")
           )
       ),
