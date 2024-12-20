@@ -9,7 +9,7 @@
 #install.packages("shinydashboard")
 #install.packages("shinycssloaders")
 
-#Libraries
+# 0 Libraries----
 library(sf)
 library(shiny)
 library(leaflet)
@@ -20,30 +20,7 @@ library(shinycssloaders)
 
 source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Central Sands Nitrate Estimator.R")
 
-#Feature switches----
-#set these to 1 to enable the functionality; set to 0 to disable
-displayContribSTPs <- 1 #show circle markers for the starting points of each contributing zone
-displayContribFLOs <- 1 #show the MODPATH lines or each of the flow paths that intersect the selected buffer region 
-dispayBufferZone <- 1 #show an outline of the buffer region we're using to select our flow paths
-
-#Define some global variable----
-coordsOfInterest <- getCoordsOfInterest()
-timeFrameOfInterest <- getTimeFrameOfInterest()
-buffer <- getBuffer()
-floDataSet <- getFloDataSet()
-stpDataSet <- getStpDataSet()
-
-#Create a boundary line for our MODPATH model (polygon data)----
-pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/prelim_ff_model_bounds_proposed.shp")
-pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
-  mutate(fill_color = "#1C00ff00")
-
-#read in wells (point data)----
-pumpingWells <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/pumping_well_pts.shp")
-pumpingWells <- st_transform(pumpingWells, crs = 4326)
-
-#Define functions----
-
+# 1 Define Functions----
 #' Let us know if the point the user selected is within our boundary
 #' @param pathLineBoundary a polygon shape file of our region
 #' @param marker a data frame of the longitude and latitude of the map marker
@@ -98,6 +75,32 @@ getFLOProjection <- function(floIDs) {
   floIDs <- st_transform(floIDs, crs = 4326)
   return(floIDs)
 }
+
+# 2 Feature switches----
+#set these to 1 to enable the functionality; set to 0 to disable
+displayContribSTPs <- 1 #show circle markers for the starting points of each contributing zone
+displayContribFLOs <- 1 #show the MODPATH lines or each of the flow paths that intersect the selected buffer region 
+dispayBufferZone <- 1 #show an outline of the buffer region we're using to select our flow paths
+
+# 3 Define some global variable----
+coordsOfInterest <- getCoordsOfInterest()
+timeFrameOfInterest <- getTimeFrameOfInterest()
+buffer <- getBuffer()
+floDataSet <- getFloDataSet()
+stpDataSet <- getStpDataSet()
+
+#Create projected FLOs to display on our map
+floDisplaySet <- slice_sample(floDataSet, n = 1500)
+floDisplaySet <- getFLOProjection(floDisplaySet)
+
+#Create a boundary line for our MODPATH model (polygon data)----
+pathLineBoundary <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/prelim_ff_model_bounds_proposed.shp")
+pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
+  mutate(fill_color = "#1C00ff00")
+
+#read in wells (point data)----
+pumpingWells <- st_read(dsn = "//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Misc_Shapefiles/pumping_well_pts.shp")
+pumpingWells <- st_transform(pumpingWells, crs = 4326)
   
   
   

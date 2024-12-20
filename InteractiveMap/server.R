@@ -14,10 +14,15 @@ function(input, output, session) {
                   radius = 5,
                   color = "blue",
                   fillColor = "green",
-                  fillOpacity = 0.7) %>%
-      hideGroup("Pumping Wells") %>%
+                  fillOpacity = 0.7) %>% ##Add pumping wells
+      addArrowhead(data = floDisplaySet,
+                  group = "Flow Lines",
+                  color = "blue",
+                  weight = 2,
+                  opacity = 0.5) %>% #Add all flow lines
+      hideGroup(c("Pumping Wells", "Flow Lines")) %>% #hide these groups by default
       addLayersControl(baseGroups = c("Default", "Aerial", "Terrain"),
-                       overlayGroups = c("Pumping Wells"),
+                       overlayGroups = c("Pumping Wells", "Flow Lines"),
                        options = layersControlOptions(collapsed = TRUE)) %>% #Add toggle-able base layers
       addPolygons(data = pathLineBoundary,
                   group = "static",
@@ -26,7 +31,7 @@ function(input, output, session) {
                   fillOpacity = 0.7) %>% #adds our pathLineBoundary shape
       addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE), group = "dynamic") #create a moveable map marker
   })
-  
+
   #Set up our reactive values----
   current_marker <- reactiveValues(
     lng = -89.518247,
