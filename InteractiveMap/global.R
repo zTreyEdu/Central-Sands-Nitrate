@@ -80,7 +80,7 @@ getFLOProjection <- function(floIDs) {
 #set these to 1 to enable the functionality; set to 0 to disable
 displayContribSTPs <- 1 #show circle markers for the starting points of each contributing zone
 displayContribFLOs <- 1 #show the MODPATH lines or each of the flow paths that intersect the selected buffer region 
-dispayBufferZone <- 1 #show an outline of the buffer region we're using to select our flow paths
+displayBufferZone <- 1 #show an outline of the buffer region we're using to select our flow paths
 
 # 3 Define some global variable----
 coordsOfInterest <- getCoordsOfInterest()

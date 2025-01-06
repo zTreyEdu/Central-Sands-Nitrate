@@ -3,6 +3,7 @@
 #'Function for shiny server code
 function(input, output, session) {
   #Initial call to create map
+  
   output$map <- renderLeaflet({
     leaflet() %>%
       setView(lng = -89.518247, lat = 44.210243, zoom = 8) %>% #center around Plainsfield, WI
@@ -29,11 +30,11 @@ function(input, output, session) {
                   color = "black",
                   fillColor = ~fill_color,
                   fillOpacity = 0.7) %>% #adds our pathLineBoundary shape
-      addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE), group = "dynamic") #create a moveable map marker
+      addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE), group = "marker") #create a moveable map marker
   })
 
-  #Set up our reactives----
-  nitrateEstimateReactive <- reactiveValues()
+  #Set up our Reactives----
+  nitrateEstimateReactive <- reactiveValues(nitrateEstimatorReturnList = generateNitrateEstimates(-89.518247, 44.210243 ))
   
   current_marker <- reactiveValues(
     lng = -89.518247,
@@ -47,6 +48,28 @@ function(input, output, session) {
     }
     
     nitrateEstimateReactive$nitrateEstimatorReturnList$no3Prediction
+  })
+  
+  #Feature Switches
+  reactiveBufferZone <- reactive({
+    if (dispayBufferZone == 1) {
+      return(st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326))
+    }
+    return(NULL)  # Return NULL if not to display
+  })
+  
+  reactiveContribFLOs <- reactive({
+    if (displayContribFLOs == 1) {
+      return(getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs))
+    }
+    return(NULL)
+  })
+  
+  reactiveContribSTPs <- reactive({
+    if (displayContribSTPs == 1) {
+      return(getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs))
+    }
+    return(NULL)
   })
   
   #Nitrate Plots----
@@ -78,9 +101,9 @@ function(input, output, session) {
 
     #Update the map with our new marker locations
     leafletProxy(mapId = "map") %>%
-      clearGroup("dynamic") %>% #only clear shapes we're drawing for each point, and keep our static border shape
+      clearGroup("marker") %>% #only clear shapes we're drawing for each point, and keep our static border shape
       addMarkers(data = data.frame(lat = current_marker$lat, lng = current_marker$lng),
-                 options = markerOptions(draggable = TRUE), group = "dynamic")
+                 options = markerOptions(draggable = TRUE), group = "marker")
 
     #Update our UI with our Nitrate Plot
     nitrateEstimateReactive$nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
@@ -92,38 +115,38 @@ function(input, output, session) {
     }
 
     #See which of our optional features to enable
-    if(dispayBufferZone == 1) {
-      bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
-      leafletProxy(mapId = "map") %>%
-        addPolygons(data = bufferZone,
-                    group = "dynamic",
-                    color = "red",
-                    opacity = 0.25,
-                    fillColor = "grey",
-                    fillOpacity = 0.85)
-    }
-
-    if(displayContribFLOs == 1) {
-      projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
-      leafletProxy(mapId = "map") %>%
-        addAntpath(data = projectedFLODIDs,
-                       group = "dynamic",
-                       color = "blue",
-                       weight = 3,
-                       opacity = 0.5,
-                   options = antpathOptions(delay = 2000))
-    }
-    
-    if(displayContribSTPs == 1) {
-      stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
-      leafletProxy(mapId = "map") %>%
-        addCircleMarkers(data = stpCoords,
-                         group = "dynamic",
-                         lng = ~lng,
-                         lat = ~lat,
-                         color = "orange",
-                         radius = 5)
-    }
+    # if(dispayBufferZone == 1) {
+    #   bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
+    #   leafletProxy(mapId = "map") %>%
+    #     addPolygons(data = bufferZone,
+    #                 group = "dynamic",
+    #                 color = "red",
+    #                 opacity = 0.25,
+    #                 fillColor = "grey",
+    #                 fillOpacity = 0.85)
+    # }
+    # 
+    # if(displayContribFLOs == 1) {
+    #   projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
+    #   leafletProxy(mapId = "map") %>%
+    #     addAntpath(data = projectedFLODIDs,
+    #                    group = "dynamic",
+    #                    color = "blue",
+    #                    weight = 3,
+    #                    opacity = 0.5,
+    #                options = antpathOptions(delay = 2000))
+    # }
+    # 
+    # if(displayContribSTPs == 1) {
+    #   stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
+    #   leafletProxy(mapId = "map") %>%
+    #     addCircleMarkers(data = stpCoords,
+    #                      group = "dynamic",
+    #                      lng = ~lng,
+    #                      lat = ~lat,
+    #                      color = "orange",
+    #                      radius = 5)
+    # }
     
     #Remove spinner
     hidePageSpinner()
@@ -139,9 +162,9 @@ function(input, output, session) {
     current_marker$lng <- input$map_shape_click$lng
 
     leafletProxy(mapId = "map") %>%
-      clearGroup("dynamic") %>% #only clear shapes we're drawing for each point, and keep our static border shape
+      clearGroup("marker") %>% #only clear shapes we're drawing for each point, and keep our static border shape
       addMarkers(data = data.frame(lat = input$map_shape_click$lat, lng = input$map_shape_click$lng),
-                 options = markerOptions(draggable = TRUE), group = "dynamic")
+                 options = markerOptions(draggable = TRUE), group = "marker")
     
     #Update our UI with our Nitrate Plot
     nitrateEstimateReactive$nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
@@ -154,41 +177,92 @@ function(input, output, session) {
     
 
     #See which of our optional features to enable
-    if(dispayBufferZone == 1) {
-      bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
+    # if(dispayBufferZone == 1) {
+    #   bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
+    #   leafletProxy(mapId = "map") %>%
+    #     addPolygons(data = bufferZone,
+    #                 group = "dynamic",
+    #                 color = "red",
+    #                 opacity = 0.25,
+    #                 fillColor = "grey",
+    #                 fillOpacity = 0.85)
+    # }
+    # 
+    # if(displayContribFLOs == 1) {
+    #   projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
+    #   leafletProxy(mapId = "map") %>%
+    #     addAntpath(data = projectedFLODIDs,
+    #                    group = "dynamic",
+    #                    color = "blue",
+    #                    weight = 3,
+    #                    opacity = 0.5,
+    #                options = antpathOptions(delay = 2000))
+    # }
+    # 
+    # if(displayContribSTPs == 1){
+    #   stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
+    #   leafletProxy(mapId = "map") %>%
+    #     addCircleMarkers(data = stpCoords,
+    #                      group = "dynamic",
+    #                      lng = ~lng,
+    #                      lat = ~lat,
+    #                      color = "orange",
+    #                      radius = 5)
+    # }
+    
+    #Remove spinner
+    hidePageSpinner()
+  })
+  
+  #Feature Switch Observer----
+  observe({
+    # Get the data for each feature
+    bufferZone <- reactiveBufferZone()
+    contribFLOs <- reactiveContribFLOs()
+    contribSTPs <- reactiveContribSTPs()
+    
+    # Handle Buffer Zone Layer
+    if (!is.null(bufferZone)) {
       leafletProxy(mapId = "map") %>%
+        clearGroup("dynamic") %>%  # Clear previous "dynamic" layers
         addPolygons(data = bufferZone,
                     group = "dynamic",
                     color = "red",
                     opacity = 0.25,
                     fillColor = "grey",
                     fillOpacity = 0.85)
+    } else {
+      leafletProxy(mapId = "map") %>%
+        clearGroup("dynamic")  # If no buffer zone, remove the group
     }
     
-    if(displayContribFLOs == 1) {
-      projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
+    # Handle ContribFLOs Layer
+    if (!is.null(contribFLOs)) {
       leafletProxy(mapId = "map") %>%
-        addAntpath(data = projectedFLODIDs,
-                       group = "dynamic",
-                       color = "blue",
-                       weight = 3,
-                       opacity = 0.5,
+        addAntpath(data = contribFLOs,
+                   group = "dynamic",
+                   color = "blue",
+                   weight = 3,
+                   opacity = 0.5,
                    options = antpathOptions(delay = 2000))
+    } else {
+      leafletProxy(mapId = "map") %>%
+        clearGroup("dynamic")  # If no FLOs, remove the group
     }
     
-    if(displayContribSTPs == 1){
-      stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
+    # Handle ContribSTPs Layer
+    if (!is.null(contribSTPs)) {
       leafletProxy(mapId = "map") %>%
-        addCircleMarkers(data = stpCoords,
+        addCircleMarkers(data = contribSTPs,
                          group = "dynamic",
                          lng = ~lng,
                          lat = ~lat,
                          color = "orange",
                          radius = 5)
+    } else {
+      leafletProxy(mapId = "map") %>%
+        clearGroup("dynamic")  # If no STPs, remove the group
     }
-    
-    #Remove spinner
-    hidePageSpinner()
   })
   
   #Pass some output text to the UI
