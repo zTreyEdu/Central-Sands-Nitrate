@@ -114,40 +114,6 @@ function(input, output, session) {
       return()
     }
 
-    #See which of our optional features to enable
-    # if(dispayBufferZone == 1) {
-    #   bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
-    #   leafletProxy(mapId = "map") %>%
-    #     addPolygons(data = bufferZone,
-    #                 group = "dynamic",
-    #                 color = "red",
-    #                 opacity = 0.25,
-    #                 fillColor = "grey",
-    #                 fillOpacity = 0.85)
-    # }
-    # 
-    # if(displayContribFLOs == 1) {
-    #   projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
-    #   leafletProxy(mapId = "map") %>%
-    #     addAntpath(data = projectedFLODIDs,
-    #                    group = "dynamic",
-    #                    color = "blue",
-    #                    weight = 3,
-    #                    opacity = 0.5,
-    #                options = antpathOptions(delay = 2000))
-    # }
-    # 
-    # if(displayContribSTPs == 1) {
-    #   stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
-    #   leafletProxy(mapId = "map") %>%
-    #     addCircleMarkers(data = stpCoords,
-    #                      group = "dynamic",
-    #                      lng = ~lng,
-    #                      lat = ~lat,
-    #                      color = "orange",
-    #                      radius = 5)
-    # }
-    
     #Remove spinner
     hidePageSpinner()
   })
@@ -174,41 +140,6 @@ function(input, output, session) {
       showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
     }
-    
-
-    #See which of our optional features to enable
-    # if(dispayBufferZone == 1) {
-    #   bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
-    #   leafletProxy(mapId = "map") %>%
-    #     addPolygons(data = bufferZone,
-    #                 group = "dynamic",
-    #                 color = "red",
-    #                 opacity = 0.25,
-    #                 fillColor = "grey",
-    #                 fillOpacity = 0.85)
-    # }
-    # 
-    # if(displayContribFLOs == 1) {
-    #   projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
-    #   leafletProxy(mapId = "map") %>%
-    #     addAntpath(data = projectedFLODIDs,
-    #                    group = "dynamic",
-    #                    color = "blue",
-    #                    weight = 3,
-    #                    opacity = 0.5,
-    #                options = antpathOptions(delay = 2000))
-    # }
-    # 
-    # if(displayContribSTPs == 1){
-    #   stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
-    #   leafletProxy(mapId = "map") %>%
-    #     addCircleMarkers(data = stpCoords,
-    #                      group = "dynamic",
-    #                      lng = ~lng,
-    #                      lat = ~lat,
-    #                      color = "orange",
-    #                      radius = 5)
-    # }
     
     #Remove spinner
     hidePageSpinner()
