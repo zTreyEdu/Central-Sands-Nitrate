@@ -32,19 +32,33 @@ function(input, output, session) {
       addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE), group = "dynamic") #create a moveable map marker
   })
 
-  #Set up our reactive values----
+  #Set up our reactives----
+  nitrateEstimateReactive <- reactiveValues()
+  
   current_marker <- reactiveValues(
     lng = -89.518247,
     lat = 44.210243
   )
-  
-  nO3Prediction <- reactiveValues(
-    fit = 0,
-    lwr = 0,
-    upr = 0
-  )
-  
 
+  nO3Prediction <- reactive({
+    #Return default values when the values aren't populated (e.g., when the app first starts up)
+    if (is.null(nitrateEstimateReactive$nitrateEstimatorReturnList)) {
+      return(list(fit = 0, lwr = 0, upr = 0 ))
+    }
+    
+    nitrateEstimateReactive$nitrateEstimatorReturnList$no3Prediction
+  })
+  
+  #Nitrate Plots----
+  output$landCoverBarPlot <- renderPlot({nitrateEstimateReactive$nitrateEstimatorReturnList$landCoverBarPlot})
+  output$flowTimeHistogram <- renderPlot({nitrateEstimateReactive$nitrateEstimatorReturnList$flowTimeHistogram})
+  
+  #Table Output----
+  output$flowlineInfoTable <- renderDataTable({
+    testFLODF <- as.data.frame(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
+    testFLODF[ ,1:8]
+    })
+  
   
   #Allow user to drag the map marker----
   observeEvent(input$map_marker_dragend, {
@@ -69,32 +83,17 @@ function(input, output, session) {
                  options = markerOptions(draggable = TRUE), group = "dynamic")
 
     #Update our UI with our Nitrate Plot
-    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
-    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
-    output$flowTimeHistogram <- renderPlot({nitrateEstimatorReturnList$flowTimeHistogram})
-    
-    testFLODF <- as.data.frame(nitrateEstimatorReturnList$floIDs)
-    output$flowlineInfoTable <- renderDataTable({testFLODF[ ,1:8]})
-    
-    #TODO
-    #ztrey left off here - testing for flo output table. I've got the framework for outputting a data frame
-    #but two issues need resolved: 1) good way to strip out SF data class, and 2) good way to strip out the geometry column (it's a list column, which breaks the table display)
-    
-    
-    #If our buffer zone didn't have any FLO intersections, then let the user know and quit out of this function
-    if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
+    nitrateEstimateReactive$nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
+
+        #If our buffer zone didn't have any FLO intersections, then let the user know and quit out of this function
+    if(nrow(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs) == 0) {
       showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
     }
-    
-    #Update Nitrate Prediction Reactive
-    nO3Prediction$fit <- nitrateEstimatorReturnList$no3Prediction$fit
-    nO3Prediction$lwr <- nitrateEstimatorReturnList$no3Prediction$lwr
-    nO3Prediction$upr <- nitrateEstimatorReturnList$no3Prediction$upr
-    
+
     #See which of our optional features to enable
     if(dispayBufferZone == 1) {
-      bufferZone <- st_transform(nitrateEstimatorReturnList$bufferZone, crs = 4326)
+      bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
       leafletProxy(mapId = "map") %>%
         addPolygons(data = bufferZone,
                     group = "dynamic",
@@ -105,7 +104,7 @@ function(input, output, session) {
     }
 
     if(displayContribFLOs == 1) {
-      projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
+      projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
         addAntpath(data = projectedFLODIDs,
                        group = "dynamic",
@@ -116,7 +115,7 @@ function(input, output, session) {
     }
     
     if(displayContribSTPs == 1) {
-      stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+      stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
       leafletProxy(mapId = "map") %>%
         addCircleMarkers(data = stpCoords,
                          group = "dynamic",
@@ -145,32 +144,18 @@ function(input, output, session) {
                  options = markerOptions(draggable = TRUE), group = "dynamic")
     
     #Update our UI with our Nitrate Plot
-    nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
-    output$landCoverBarPlot <- renderPlot({nitrateEstimatorReturnList$landCoverBarPlot})
-    output$flowTimeHistogram <- renderPlot({nitrateEstimatorReturnList$flowTimeHistogram})
-    
-    testFLODF <- as.data.frame(nitrateEstimatorReturnList$floIDs)
-    output$flowlineInfoTable <- renderDataTable({testFLODF[ ,1:8]})
-    
-    #TODO
-    #ztrey left off here - testing for flo output table. I've got the framework for outputting a data frame
-    #but two issues need resolved: 1) good way to strip out SF data class, and 2) good way to strip out the geometry column (it's a list column, which breaks the table display)
+    nitrateEstimateReactive$nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
 
-    
     #If our buffer zone didn't have any FLO interesections, then let the user know and quit out of this function
-    if(nrow(nitrateEstimatorReturnList$stpIDs) == 0) {
+    if(nrow(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs) == 0) {
       showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
     }
     
-    #Update Nitrate Prediction Reactive
-    nO3Prediction$fit <- nitrateEstimatorReturnList$no3Prediction$fit
-    nO3Prediction$lwr <- nitrateEstimatorReturnList$no3Prediction$lwr
-    nO3Prediction$upr <- nitrateEstimatorReturnList$no3Prediction$upr
-    
+
     #See which of our optional features to enable
     if(dispayBufferZone == 1) {
-      bufferZone <- st_transform(nitrateEstimatorReturnList$bufferZone, crs = 4326)
+      bufferZone <- st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326)
       leafletProxy(mapId = "map") %>%
         addPolygons(data = bufferZone,
                     group = "dynamic",
@@ -181,7 +166,7 @@ function(input, output, session) {
     }
     
     if(displayContribFLOs == 1) {
-      projectedFLODIDs <- getFLOProjection(nitrateEstimatorReturnList$floIDs)
+      projectedFLODIDs <- getFLOProjection(nitrateEstimateReactive$nitrateEstimatorReturnList$floIDs)
       leafletProxy(mapId = "map") %>%
         addAntpath(data = projectedFLODIDs,
                        group = "dynamic",
@@ -192,7 +177,7 @@ function(input, output, session) {
     }
     
     if(displayContribSTPs == 1){
-      stpCoords <- getSTPCoords(nitrateEstimatorReturnList$stpIDs)
+      stpCoords <- getSTPCoords(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs)
       leafletProxy(mapId = "map") %>%
         addCircleMarkers(data = stpCoords,
                          group = "dynamic",
@@ -218,9 +203,9 @@ function(input, output, session) {
            "Current marker longitude: ", displayLng, "<br>")
   })
   output$chartExplainer <- renderText({
-    no3fit <- format(round(nO3Prediction$fit, digits = 1), nsmall = 1) #intentionally not using the point estimate prediction, as it projects too much certainty
-    no3lwr <- format(round(nO3Prediction$lwr, digits = 1), nsmall = 1)
-    no3upr <- format(round(nO3Prediction$upr, digits = 1), nsmall = 1)
+    no3fit <- format(round(nO3Prediction()$fit, digits = 1), nsmall = 1) #intentionally not using the point estimate prediction, as it projects too much certainty
+    no3lwr <- format(round(nO3Prediction()$lwr, digits = 1), nsmall = 1)
+    no3upr <- format(round(nO3Prediction()$upr, digits = 1), nsmall = 1)
     no3Units <- "mg/L"
     paste0(h2("Chart Explanation"),
            "This bar chart shows the break down of land cover for the groundwater entry points", "<br>",
