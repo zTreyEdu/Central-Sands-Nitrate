@@ -6,7 +6,7 @@ function(input, output, session) {
   
   output$map <- renderLeaflet({
     leaflet() %>%
-      setView(lng = -89.518247, lat = 44.210243, zoom = 8) %>% #center around Plainsfield, WI
+      setView(lng = defaultLng, lat = defaultLat, zoom = 8) %>%
       addProviderTiles("Esri.WorldImagery", group = "Aerial") %>% #Aerial Photo Base Layer
       addProviderTiles("Stadia.StamenTerrain", group = "Terrain") %>%
       addProviderTiles("OpenStreetMap.Mapnik", group = "Default") %>% #Default Base Layer
@@ -30,15 +30,15 @@ function(input, output, session) {
                   color = "black",
                   fillColor = ~fill_color,
                   fillOpacity = 0.7) %>% #adds our pathLineBoundary shape
-      addMarkers(lng = -89.518247, lat = 44.210243, options = markerOptions(draggable = TRUE), group = "marker") #create a moveable map marker
+      addMarkers(lng = defaultLng, lat = defaultLat, options = markerOptions(draggable = TRUE), group = "marker") #create a moveable map marker
   })
 
   #Set up our Reactives----
-  nitrateEstimateReactive <- reactiveValues(nitrateEstimatorReturnList = generateNitrateEstimates(-89.518247, 44.210243 ))
+  nitrateEstimateReactive <- reactiveValues(nitrateEstimatorReturnList = generateNitrateEstimates(defaultLng, defaultLat))
   
   current_marker <- reactiveValues(
-    lng = -89.518247,
-    lat = 44.210243
+    lng = defaultLng,
+    lat = defaultLat
   )
 
   nO3Prediction <- reactive({

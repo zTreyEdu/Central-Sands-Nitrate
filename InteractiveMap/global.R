@@ -83,6 +83,8 @@ displayContribFLOs <- 1 #show the MODPATH lines or each of the flow paths that i
 displayBufferZone <- 1 #show an outline of the buffer region we're using to select our flow paths
 
 # 3 Define some global variable----
+defaultLng <- -89.518247 #center around Plainsfield, WI
+defaultLat <- 44.210243
 coordsOfInterest <- getCoordsOfInterest()
 timeFrameOfInterest <- getTimeFrameOfInterest()
 buffer <- getBuffer()
