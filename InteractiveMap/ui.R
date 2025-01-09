@@ -7,35 +7,39 @@ dashboardPage(
   dashboardHeader(disable = TRUE),
   dashboardSidebar(disable = TRUE),
   dashboardBody(
-    fluidRow(
-      box(width = 6,
-          htmlOutput("mapExplainer")
-          ),
-      box(width = 6,
-          htmlOutput("chartExplainer")
+    navlistPanel(
+      id = "mainPanel",
+      well = TRUE,
+      
+      #First Panel for Explaining
+      tabPanel(
+        title = "Introduction",
+        fluidRow(
+          box(width = 6, htmlOutput("mapExplainer")),
+          box(width = 6, htmlOutput("chartExplainer"))
           )
-      ),
-    fluidRow(
-      box(width = 4,
-          leafletOutput(outputId = "map", height = "500px")
+        ),
+      
+      tabPanel(
+        title = "Analysis",
+        fluidRow(
+          box(width = 4, leafletOutput(outputId = "map", height = "500px")),
+          box(width = 4, plotOutput(outputId = "landCoverBarPlot")),
+          box(width = 4, plotOutput(outputId = "flowTimeHistogram"))
           ),
-      box(width = 4,
-          plotOutput(outputId = "landCoverBarPlot")
+        fluidRow(
+          box(htmlOutput("takeAction")),
+          box(htmlOutput("externalLinks"))
           ),
-      box(width = 4,
-          plotOutput(outputId = "flowTimeHistogram")
+        fluidRow(
+          box(width = 6, htmlOutput("modelAssumptions")
+          ),
+          box(width = 6, dataTableOutput("flowlineInfoTable"))
+          ),
+        fluidRow(
+          box(width = 6, imageOutput("groundWaterImage"))
           )
-      ),
-    fluidRow(
-      box(htmlOutput("takeAction")),
-      box(htmlOutput("externalLinks"))
-      ),
-    fluidRow(
-      box(width = 6,
-          htmlOutput("modelAssumptions")
-          ),
-      box(width = 6,
-          dataTableOutput("flowlineInfoTable"))
+        )
       )
     ),
   title = "Interactive Groundwater Flow Map"

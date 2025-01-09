@@ -252,4 +252,10 @@ function(input, output, session) {
            tags$li("The selected region is buffered to a circle with a 100 meter radius.")
            )
   })
+  
+  output$groundWaterImage  <- renderImage({
+    list(src = file.path("www/groundWaterDiagram.png"),
+         contentType = "image/png",
+         style = "max-width: 100%; max-height: 100%")
+    }, deleteFile = FALSE)
 }
