@@ -202,7 +202,7 @@ function(input, output, session) {
     displayLng <- format(round(current_marker$lng, digits = 7), nsmall = 7) #round to 7 decimal points, and format to display trailing 0s
     paste0(h2("Map Explanation"),
            "Click or drag the marker within the bounded region to get estimated land use from groundwater contributing zones.", "<br>",
-           "The purple dots represent simulated groundwater entry points.", "<br>",
+           "The orange dots represent simulated groundwater entry points.", "<br>",
            "The blue lines represent the modeled groundwater flow.", "<br>",
            "Current marker latitude: ", displayLat, "<br>",
            "Current marker longitude: ", displayLng, "<br>")
