@@ -162,44 +162,46 @@ function(input, output, session) {
     # Handle Buffer Zone Layer
     if (!is.null(bufferZone)) {
       leafletProxy(mapId = "map") %>%
-        clearGroup("dynamic") %>%  # Clear previous "dynamic" layers
+        clearGroup("bufferZone") %>%  # Clear previous "bufferZone" layer
         addPolygons(data = bufferZone,
-                    group = "dynamic",
+                    group = "bufferZone",
                     color = "red",
                     opacity = 0.25,
                     fillColor = "grey",
                     fillOpacity = 0.85)
     } else {
       leafletProxy(mapId = "map") %>%
-        clearGroup("dynamic")  # If no buffer zone, remove the group
+        clearGroup("bufferZone")  # If no buffer zone, remove the group
     }
     
     # Handle ContribFLOs Layer
     if (!is.null(contribFLOs)) {
       leafletProxy(mapId = "map") %>%
+        clearGroup("contribFLOs") %>%
         addAntpath(data = contribFLOs,
-                   group = "dynamic",
+                   group = "contribFLOs",
                    color = "blue",
                    weight = 3,
                    opacity = 0.5,
                    options = antpathOptions(delay = 2000))
     } else {
       leafletProxy(mapId = "map") %>%
-        clearGroup("dynamic")  # If no FLOs, remove the group
+        clearGroup("contribFLOs")  # If no FLOs, remove the group
     }
     
     # Handle ContribSTPs Layer
     if (!is.null(contribSTPs)) {
       leafletProxy(mapId = "map") %>%
+        clearGroup("contribSTPs") %>%
         addCircleMarkers(data = contribSTPs,
-                         group = "dynamic",
+                         group = "contribSTPs",
                          lng = ~lng,
                          lat = ~lat,
                          color = "orange",
                          radius = 5)
     } else {
       leafletProxy(mapId = "map") %>%
-        clearGroup("dynamic")  # If no STPs, remove the group
+        clearGroup("contribSTPs")  # If no STPs, remove the group
     }
   })
   
