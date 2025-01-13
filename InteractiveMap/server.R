@@ -157,7 +157,7 @@ function(input, output, session) {
     # Get the data for each feature
     bufferZone <- featureSwitches()$bufferZone
     contribFLOs <- featureSwitches()$contribFLOs
-    contribSTPs <- featureSwitches()$conttribSTPs
+    contribSTPs <- featureSwitches()$contribSTPs
     
     # Handle Buffer Zone Layer
     if (!is.null(bufferZone)) {
