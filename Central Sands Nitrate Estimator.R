@@ -356,7 +356,7 @@ createFlowTimeHistogram <- function(floTimes) {
   flowTimeHistogram <- floTimes %>%
     ggplot(aes(x = time_in_years)) +
     geom_histogram(fill = "blue", color = "black") +
-    labs(title = "Transit times from contributing zones to selected region",
+    labs(title = "Transit Times from Contributing Zones",
          x = "Ground Water Transit Times (years)",
          y = "Frequency") +
     theme(title = element_text(size = 20),
