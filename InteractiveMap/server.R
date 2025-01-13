@@ -52,7 +52,7 @@ function(input, output, session) {
   
   #Feature Switches
   reactiveBufferZone <- reactive({
-    if (dispayBufferZone == 1) {
+    if (displayBufferZone == 1) {
       return(st_transform(nitrateEstimateReactive$nitrateEstimatorReturnList$bufferZone, crs = 4326))
     }
     return(NULL)  # Return NULL if not to display
