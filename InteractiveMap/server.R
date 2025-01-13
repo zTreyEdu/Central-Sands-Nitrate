@@ -72,6 +72,13 @@ function(input, output, session) {
     return(NULL)
   })
   
+  featureSwitches <- reactive({
+    list(bufferZone = reactiveBufferZone(),
+         contribFLOs = reactiveContribFLOs(),
+         contribSTPs = reactiveContribSTPs()
+         )
+    })
+  
   #Nitrate Plots----
   output$landCoverBarPlot <- renderPlot({nitrateEstimateReactive$nitrateEstimatorReturnList$landCoverBarPlot})
   output$flowTimeHistogram <- renderPlot({nitrateEstimateReactive$nitrateEstimatorReturnList$flowTimeHistogram})
@@ -146,11 +153,11 @@ function(input, output, session) {
   })
   
   #Feature Switch Observer----
-  observe({
+  observeEvent(featureSwitches(), {
     # Get the data for each feature
-    bufferZone <- reactiveBufferZone()
-    contribFLOs <- reactiveContribFLOs()
-    contribSTPs <- reactiveContribSTPs()
+    bufferZone <- featureSwitches()$bufferZone
+    contribFLOs <- featureSwitches()$contribFLOs
+    contribSTPs <- featureSwitches()$conttribSTPs
     
     # Handle Buffer Zone Layer
     if (!is.null(bufferZone)) {
@@ -207,7 +214,7 @@ function(input, output, session) {
            "Current marker latitude: ", displayLat, "<br>",
            "Current marker longitude: ", displayLng, "<br>")
   })
-  output$chartExplainer <- renderText({
+  output$landCoverExplainer <- renderText({
     no3fit <- format(round(nO3Prediction()$fit, digits = 1), nsmall = 1) #intentionally not using the point estimate prediction, as it projects too much certainty
     no3lwr <- format(round(nO3Prediction()$lwr, digits = 1), nsmall = 1)
     no3upr <- format(round(nO3Prediction()$upr, digits = 1), nsmall = 1)
@@ -216,23 +223,29 @@ function(input, output, session) {
            "This bar chart shows the break down of land cover for the groundwater entry points", "<br>",
            "The nitrate level for the region you selected is likely between ", no3lwr, " ", no3Units, " and ", no3upr, " ", no3Units)
   })
+  
+  output$transitTimeExplainer <- renderText({
+    paste0(h2("Chart Explanation"),
+           "This chart shows the distribution of transit times for the modeled flow paths.")
+  })
   output$externalLinks <- renderText({
     paste0(h2("Additional Info"),
            tags$ul(
-             tags$li(a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency")),
-             tags$li(a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education")),
+             tags$li(a(href ="https://www.epa.gov/mn/what-nitrate", "Learn about Nitrate from the Environmental Protection Agency", target = "_blank")),
+             tags$li(a(href = "https://www3.uwsp.edu/cnr-ap/watershed/Pages/default.aspx", "See more maps at the UW-Stevens Point Center for Watershed Science and Education", target = "_blank")),
              tags$li("Learn about the modeling software used: "),
              tags$ul(
-               tags$li(a(href = "https://www.usgs.gov/mission-areas/water-resources/science/modflow-and-related-programs", "MODFLOW")),
-               tags$li(a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH"))
+               tags$li(a(href = "https://www.usgs.gov/mission-areas/water-resources/science/modflow-and-related-programs", "MODFLOW", target = "_blank")),
+               tags$li(a(href = "https://www.usgs.gov/software/modpath-particle-tracking-model-modflow", "MODPATH", target = "_blank"))
                )
              )
            )
   })
   output$takeAction <- renderText({
     paste0(h2("Action"),
-           "If your well has a high percentage of agricultural contributing zones, we recommend you test your well at least once a --time--.",
-           "You can order a test here: --link out to website to order testing--"
+           "If your well has a high percentage of agricultural contributing zones, we recommend you test your well.", "<br>",
+           "You can ",
+           tags$a(href = "https://cnroutreached.asapconnected.com/#ProductCategory=WEAL", "order a test here.", target = "_blank")
            )
   })
   

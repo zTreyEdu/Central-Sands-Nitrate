@@ -10,24 +10,23 @@ dashboardPage(
     tabsetPanel(
       id = "mainPanel",
       
-      #First tab for Explaining
+      #First tab for Interactive Display
       tabPanel(
         title = "Interactive Map",
         fluidRow(
-          box(width = 6, htmlOutput("mapExplainer")),
-          box(width = 6, htmlOutput("chartExplainer"))
+          box(width = 4, withSpinner(leafletOutput(outputId = "map", height = "500px"), caption = "Rendering Map..."), htmlOutput("mapExplainer")),
+          box(width = 4, withSpinner(plotOutput(outputId = "landCoverBarPlot", height = "500px"), caption = "Determining Land Cover..."), htmlOutput("landCoverExplainer")),
+          box(width = 4, withSpinner(plotOutput(outputId = "flowTimeHistogram", height = "500px"), caption ="Processing Transit Times..."), htmlOutput("transitTimeExplainer"))
           ),
         fluidRow(
-          box(width = 4, leafletOutput(outputId = "map", height = "500px")),
-          box(width = 4, plotOutput(outputId = "landCoverBarPlot")),
-          box(width = 4, plotOutput(outputId = "flowTimeHistogram"))
-        )
+          box(htmlOutput("takeAction"))
+          )
         ),
       
+      #Second tab for Additional Info
       tabPanel(
         title = "Additional Information",
         fluidRow(
-          box(htmlOutput("takeAction")),
           box(htmlOutput("externalLinks"))
           ),
         fluidRow(
