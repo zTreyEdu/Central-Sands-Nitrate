@@ -7,26 +7,25 @@ dashboardPage(
   dashboardHeader(disable = TRUE),
   dashboardSidebar(disable = TRUE),
   dashboardBody(
-    navlistPanel(
+    tabsetPanel(
       id = "mainPanel",
-      well = TRUE,
       
-      #First Panel for Explaining
+      #First tab for Explaining
       tabPanel(
-        title = "Introduction",
+        title = "Interactive Map",
         fluidRow(
           box(width = 6, htmlOutput("mapExplainer")),
           box(width = 6, htmlOutput("chartExplainer"))
-          )
-        ),
-      
-      tabPanel(
-        title = "Analysis",
+          ),
         fluidRow(
           box(width = 4, leafletOutput(outputId = "map", height = "500px")),
           box(width = 4, plotOutput(outputId = "landCoverBarPlot")),
           box(width = 4, plotOutput(outputId = "flowTimeHistogram"))
-          ),
+        )
+        ),
+      
+      tabPanel(
+        title = "Additional Information",
         fluidRow(
           box(htmlOutput("takeAction")),
           box(htmlOutput("externalLinks"))
