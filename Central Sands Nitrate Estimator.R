@@ -358,8 +358,8 @@ createFlowTimeHistogram <- function(floTimes) {
     geom_histogram(fill = "blue", color = "black") +
     labs(title = "Transit Times from Contributing Zones",
          x = "Ground Water Transit Times (years)",
-         y = "Frequency") +
-    theme(title = element_text(size = 20),
+         y = "Count of Pathlines") +
+    theme(title = element_text(size = 19),
           axis.title = element_text(size = 18),
           axis.text.x = element_text(size = 16),
           axis.text.y = element_text(size = 16))
@@ -394,7 +394,10 @@ createLandCoverPlot <- function(estimatedNitrateLevels) {
   estimatedNitrateLevelsStacked <- estimatedNitrateLevels %>%
     mutate(LandCoverCategory = case_when(
       CLASS_NAME %in% c("Corn", "Potatoes", "Sweet Corn") ~ "High Agriculture",
-      CLASS_NAME %in% c("Deciduous Forest", "Mixed Forest", "Herbaceous Wetlands") ~ "Nature",
+      CLASS_NAME %in% c("Deciduous Forest", "Mixed Forest", "Evergreen Forest",
+                        "Woody Wetlands", "Herbaceous Wetlands",
+                        "Shrubland", "Grassland/Pasture",
+                        "Barren") ~ "Nature",
       TRUE ~ CLASS_NAME
     ))
   
@@ -411,7 +414,7 @@ createLandCoverPlot <- function(estimatedNitrateLevels) {
     ggplot(aes(x = LandCoverCategory, y = CDL_2022_Relative, fill = CLASS_NAME)) +
     geom_bar(stat = "identity") +
     labs(x = "Land Cover Category", y = "Percent", title = stackPlotTitle, fill = "Land Cover") +
-    theme(title = element_text(size = 20),
+    theme(title = element_text(size = 19),
           axis.title = element_text(size = 18),
           axis.text.y = element_text(size = 16),
           axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 16)) + #tilt axis labels
