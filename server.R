@@ -223,7 +223,7 @@ function(input, output, session) {
     no3Units <- "mg/L"
     paste0(h2("Chart Explanation"),
            "This bar chart shows the break down of land cover for the groundwater entry points", "<br>",
-           "The nitrate level for the region you selected is likely between ", no3lwr, " ", no3Units, " and ", no3upr, " ", no3Units)
+           "Based on a correlation with land cover, the the nitrate level for the region you selected is likely between ", no3lwr, " ", no3Units, " and ", no3upr, " ", no3Units)
   })
   
   output$transitTimeExplainer <- renderText({
@@ -245,9 +245,11 @@ function(input, output, session) {
   })
   output$takeAction <- renderText({
     paste0(h2("Action"),
-           "If your well has a high percentage of agricultural contributing zones, we recommend you test your well.", "<br>",
+           "If your well has a high percentage of agricultural contributing zones, we recommend you test your well.",
            "You can ",
-           tags$a(href = "https://cnroutreached.asapconnected.com/#ProductCategory=WEAL", "order a test here.", target = "_blank")
+           tags$a(href = "https://cnroutreached.asapconnected.com/#ProductCategory=WEAL", "order a test here.", target = "_blank"), "<br>",
+           "To learn more about well water quality, you can visit ",
+           tags$a(href = "https://dnr.wisconsin.gov/topic/Wells", "the Wisconsin Department of Natural Resource's website.")
            )
   })
   
@@ -273,4 +275,8 @@ function(input, output, session) {
          contentType = "image/png",
          style = "max-width: 100%; max-height: 100%")
     }, deleteFile = FALSE)
+  
+  output$flowlines3D <- renderUI({
+    tags$iframe(src = "test3Dflowlines.html", width = "100%", height = "600px")
+  })
 }
