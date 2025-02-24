@@ -23,7 +23,7 @@ library(terra)
 #library(devtools)
 library(profvis)
 
-source("//ad.wisc.edu/wgnhs/Projects/Central_Sands_Nitrate_Transport/R_Analysis/Central Sands Nitrate Estimator.R")
+source("Central Sands Nitrate Estimator.R")
 
 # ----1 Define Functions----
 #' Read in shapefiles for our cells containing nitrate data
