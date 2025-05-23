@@ -65,8 +65,6 @@ createSFPoint <- function(xCoord, yCoord) {
 #' Coordinates are currently hard-coded, but could be modified to allow for front-end user input
 #' @returns coordinates stored as an SF Point Object
 getCoordsOfInterest <- function() {
-  #xCoord <- -89.3551954
-  #yCoord <- 44.4980914
   xCoord <- -89.6168518
   yCoord <- 44.1309709
   coords <- createSFPoint(xCoord, yCoord)
@@ -106,11 +104,11 @@ getCoordBufferZone <- function(coordsOfInterest, buffer) {
 #' the specific numbers used (-2 and +79740) come from how the original ID generation code was written.
 #' @returns a data frame that has our MODPATH flow lines, including a new column indicating which file a given row came from
 getFloDataSet <- function() {
-  floDataSet0 <- st_read(dsn = "Data Sets/Particles_updated_June2024/1particle_top_pathlines_0.shp")
+  floDataSet0 <- st_read(dsn = "Data Sets/Particles_Pathlines_May2025/1particle_top_pathlines_0.shp")
   floDataSet0$source_file <- "pathlines0"
   floDataSet0$conversion_to_partidloc_ <- (floDataSet0$particleid - 2)
   
-  floDataSet1 <- st_read(dsn = "Data Sets/Particles_updated_June2024/1particle_top_pathlines_1.shp")
+  floDataSet1 <- st_read(dsn = "Data Sets/Particles_Pathlines_May2025/1particle_top_pathlines_1.shp")
   floDataSet1$source_file <- "pathlines1"
   floDataSet1$conversion_to_partidloc_  <- (floDataSet1$particleid + 79740)
   
