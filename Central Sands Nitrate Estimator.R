@@ -38,6 +38,19 @@ library(tidyr)
 
 
 # ----1 Define Functions----
+#' User input for the land cover data set to use. This is currently hard-coded, but could be updated to allow for prompting a user.
+#' 
+#' Use the following codes:
+#'    1 - CropScape
+#'    2 - WiscLand 2, Level 1
+#'    
+#' @returns a number corresponding to the land cover data set to use
+getLandCoverCode <- function() {
+  landCoverCode <- 1
+  return(landCoverCode)
+}
+
+
 #' Get Value and Class_Name data from the Cropscape Raster tif
 #' @returns a data frame with the Value and Class-Name Pair for the Cropscape Data set
 getCropScapeClassNames <- function() {
@@ -272,12 +285,12 @@ displayCoordsForSTPIDs <- function(stpDataSet, stpIDs) {
 }
 
 
-#' Get the land use mix for our starting points
+#' Get the CropScape land use mix for our starting points
 #' @param stpDataSet a data frame of STPs from our MODPATH model
 #' @param stpIDs a data frame of STP IDs
 #' @param timeFrameOfInterest a time in years
 #' @returns a data frame of land cover
-getLandCoverMix <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
+getLandCoverMixCropScape <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
   foreignKey <- c("partidloc_" = "partidloc_")
   landCoverMix <- stpDataSet %>%
     inner_join(stpIDs, by = foreignKey) %>%
@@ -304,13 +317,13 @@ getSummarizedLandCoverMix <- function(landCoverMix) {
   return(summarizedLandCoverMix)
 }
 
-#' Calculates the estimated nitrate levels given a land cover mix
+#' Calculates the estimated nitrate levels given a CropScape land cover mix
 #' t15
 #' @param landCoverMix a data frame with one row per particle IDs and a column for land cover
 #' @returns a list with the following structure:
 #'            summarizedLandCoverMix - a data frame with one row per land cover and columns for the amount of each land cover
 #'            no3Prediction - a data frame with the no3 prediction. It has the fit value, as well as the prediction interval lower and upper bound
-getEstimatedNitrateLevels <- function(landCoverMix) {
+getEstimatedNitrateLevelsCropScape <- function(landCoverMix) {
   #Get our Summarized Land Cover Mix
   #
   summarizedLandCoverMix <- getSummarizedLandCoverMix(landCoverMix)
@@ -366,12 +379,13 @@ createFlowTimeHistogram <- function(floTimes) {
 
 #' Wrapper function to create various plots
 #' @param nitrateEstimatorReturnList a list of other objects that stores information to plot
+#' @param landCoverCode the code for the land cover data set to use
 #' @returns nitrateEstimatorReturnList with a few additional indices:
 #'                        landCoverPlot - a stacked bar chart of the contributing zone land cover
 #'                        flowTimeHistogram - a histogram of the flow times
-createPlots <- function(nitrateEstimatorReturnList) {
+createPlots <- function(nitrateEstimatorReturnList,landCoverCode) {
   #Create our plots
-  landCoverBarPlot <- createLandCoverPlot(nitrateEstimatorReturnList$landCover)
+  landCoverBarPlot <- createLandCoverPlotCropScape(nitrateEstimatorReturnList$landCover)
   flowTimeHistogram <- createFlowTimeHistogram(nitrateEstimatorReturnList$floIDs)
   
   #add them to our return list
@@ -382,10 +396,10 @@ createPlots <- function(nitrateEstimatorReturnList) {
   return(nitrateEstimatorReturnList)
 }
 
-#' Create a bar plot
+#' Create a stacked bar chart of CropScape land covers
 #' @param estimatedNitrateLevels a data frame of the landuse mix
 #' @returns a bar plot of nitrate data
-createLandCoverPlot <- function(estimatedNitrateLevels) {
+createLandCoverPlotCropScape <- function(estimatedNitrateLevels) {
   #Stacked bar grouping
   #t014 I've got options around: 1) should we group individual land covers? 2) should we make a pareto chart or hold specific categories in place?
   #If I only stack some stuff, then i think color-coding the stacked stuff, and just having everything else be the same color is the way to go. No good to "double encode" with a label and color.
@@ -427,13 +441,14 @@ createLandCoverPlot <- function(estimatedNitrateLevels) {
 #' @param buffer the radius of our buffer zone (in meters)
 #' @param floDataSet the flow lines (FLOs) generated from our MODPATH model
 #' @param stpDataSet the starting points (STPs) from our MODPATH model
+#' @param landCoverCode the code for the land cover data set to use
 #' @returns a list with the following structure:
 #'            stpIDs: a data frame of contributing point IDs
 #'            floIDs: a data frame of FLO IDs that intersect with our selected buffer zone
 #'            landCover: Land Cover fraction of all of the contributing zones
 #'            bufferZone: a polygon of our buffer zone
 #'            no3Prediction: Estimated nitrate level
-runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet) {
+runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet,landCoverCode) {
   #Find contributing FLOs and STPs for the coordinates of interest
   contribSTPsForCoordReturnList <- getContribSTPsForCoord(coordsOfInterest, buffer, timeFrameOfInterest, floDataSet)
   contribSTPIDs <- contribSTPsForCoordReturnList$stpIDs
@@ -441,10 +456,10 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   bufferZone <- contribSTPsForCoordReturnList$bufferZone
  
   # Find the land cover for the contributing points
-  landCoverMix <- getLandCoverMix(stpDataSet, contribSTPIDs, timeFrameOfInterest)
+  landCoverMix <- getLandCoverMixCropScape(stpDataSet, contribSTPIDs, timeFrameOfInterest)
   
   # Find the estimated nitrogen impacts given the land use
-  estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevels(landCoverMix)
+  estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsCropScape(landCoverMix)
   landCoverSummary <- estimatedNitrateLevelsReturnList$summarizedLandCover
   no3Prediction <- estimatedNitrateLevelsReturnList$no3Prediction
   
@@ -461,14 +476,15 @@ mainNitrateEstimator <- function() {
   coordsOfInterest <- getCoordsOfInterest()
   timeFrameOfInterest <- getTimeFrameOfInterest()
   buffer <- getBuffer()
+  landCoverCode <- getLandCoverCode()
   
   # ----2.2 Read in data----
   floDataSet <- getFloDataSet()
   stpDataSet <- getStpDataSet()
   
   # ----2.3 Find Nitrate Estimates----
-  nitrateEstimatorReturnList <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
-  nitrateEstimatorReturnList <- createPlots(nitrateEstimatorReturnList)
+  nitrateEstimatorReturnList <- runNitrateEstimator(coordsOfInterest, timeFrameOfInterest, buffer, floDataSet, stpDataSet,landCoverCode)
+  nitrateEstimatorReturnList <- createPlots(nitrateEstimatorReturnList,landCoverCode)
   print(nitrateEstimatorReturnList$landCoverBarPlot)
   print(nitrateEstimatorReturnList$flowTimeHistogram)
   print(nitrateEstimatorReturnList$no3Prediction)
