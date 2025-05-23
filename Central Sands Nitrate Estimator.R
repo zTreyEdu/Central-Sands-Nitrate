@@ -38,6 +38,38 @@ library(tidyr)
 
 
 # ----1 Define Functions----
+
+#' Wrapper function to get the estimated Nitrate Level depending on the land cover data set
+#' @param landCoverMix a data frame with one row per particle IDs and a column for land cover
+#' @param landCoverCode the code for the land cover data set to use
+#' @returns a list with the following structure:
+#'            summarizedLandCoverMix - a data frame with one row per land cover and columns for the amount of each land cover
+#'            no3Prediction - a data frame with the no3 prediction. It has the fit value, as well as the prediction interval lower and upper bound
+getEstimatedNitrateLevelsWrapper <- function(landCoverMix,landCoverCode) {
+  if(landCoverCode == 1){
+    estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsCropScape(landCoverMix)
+  } else{
+    estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsCropScape(landCoverMix) #we'll default to CropScape. CropScape was chosen arbitrarily.
+  }
+  return(estimatedNitrateLevelsReturnList)
+}
+
+#' Wrapper function to get land cover mix depending on the land cover data set
+#' @param stpDataSet a data frame of STPs from our MODPATH model
+#' @param stpIDs a data frame of STP IDs
+#' @param timeFrameOfInterest a time in years
+#' @param landCoverCode the code for the land cover data set to use
+#' @returns a data frame of land cover
+getLandCoverMixWrapper <- function(stpDataSet, contribSTPIDs, timeFrameOfInterest,landCoverCode) {
+  if(landCoverCode == 1){
+    landCoverMix <- getLandCoverMixCropScape(stpDataSet, contribSTPIDs, timeFrameOfInterest)
+  } else{
+    landCoverMix <- getLandCoverMixCropScape(stpDataSet, contribSTPIDs, timeFrameOfInterest) #we'll default to CropScape. CropScape was chosen arbitrarily.
+  }
+  
+  return(landCoverMix)
+}
+
 #' User input for the land cover data set to use. This is currently hard-coded, but could be updated to allow for prompting a user.
 #' 
 #' Use the following codes:
@@ -456,10 +488,10 @@ runNitrateEstimator <- function(coordsOfInterest, timeFrameOfInterest, buffer, f
   bufferZone <- contribSTPsForCoordReturnList$bufferZone
  
   # Find the land cover for the contributing points
-  landCoverMix <- getLandCoverMixCropScape(stpDataSet, contribSTPIDs, timeFrameOfInterest)
+  landCoverMix <- getLandCoverMixWrapper(stpDataSet, contribSTPIDs, timeFrameOfInterest, landCoverCode)
   
   # Find the estimated nitrogen impacts given the land use
-  estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsCropScape(landCoverMix)
+  estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsWrapper(landCoverMix, landCoverCode)
   landCoverSummary <- estimatedNitrateLevelsReturnList$summarizedLandCover
   no3Prediction <- estimatedNitrateLevelsReturnList$no3Prediction
   
