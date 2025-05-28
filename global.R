@@ -46,8 +46,9 @@ getRegionData <- function(pathLineBoundary, marker) {
 #' @returns a list of return values. View runNitrateEstimator and createPlots for list structure
 generateNitrateEstimates <- function(longitude, latitude) {
   selectedCoords <- createSFPoint(longitude, latitude)
-  nitrateEstimatorReturnList <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet)
-  nitrateEstimatorReturnList <- createPlots(nitrateEstimatorReturnList)
+  landCoverCode <- getLandCoverCode()
+  nitrateEstimatorReturnList <- runNitrateEstimator(selectedCoords, timeFrameOfInterest, buffer, floDataSet, stpDataSet, landCoverCode)
+  nitrateEstimatorReturnList <- createPlots(nitrateEstimatorReturnList, landCoverCode)
   return(nitrateEstimatorReturnList)
 }
 
