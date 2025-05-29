@@ -1,6 +1,4 @@
 #Purpose: code for the UI for the Interactive Map, a shiny app
-#
-
 
 # Define UI for application
 dashboardPage(
@@ -10,7 +8,7 @@ dashboardPage(
     tabsetPanel(
       id = "mainPanel",
       
-      #First tab for Interactive Display
+      #First tab - Interactive Display----
       tabPanel(
         title = "Interactive Map",
         fluidRow(
@@ -23,7 +21,7 @@ dashboardPage(
           )
         ),
       
-      #Second tab for Additional Info
+      #Second tab - Additional Info----
       tabPanel(
         title = "Additional Information",
         fluidRow(
@@ -34,7 +32,7 @@ dashboardPage(
           )
         ),
       
-      #Third tab for flowline details
+      #Third tab - Flowline Details----
       tabPanel(
         title = "Flowline Details (Prototype)",
         fluidRow(

@@ -1,9 +1,8 @@
 #Purpose: Server logic of the Interactive Map
 
-#'Function for shiny server code
+#Function for shiny server code
 function(input, output, session) {
-  #Initial call to create map
-  
+  #Initial call to create map-----
   output$map <- renderLeaflet({
     leaflet() %>%
       setView(lng = defaultLng, lat = defaultLat, zoom = 8) %>%
@@ -115,7 +114,7 @@ function(input, output, session) {
     #Update our UI with our Nitrate Plot
     nitrateEstimateReactive$nitrateEstimatorReturnList <- generateNitrateEstimates(current_marker$lng, current_marker$lat)
 
-        #If our buffer zone didn't have any FLO intersections, then let the user know and quit out of this function
+    #If our buffer zone didn't have any FLO intersections, then let the user know and quit out of this function
     if(nrow(nitrateEstimateReactive$nitrateEstimatorReturnList$stpIDs) == 0) {
       showNotification("Error: the model does not have any data for flow lines for this area. Please select another area.", id = "no_flowlines", type = "error")
       return()
@@ -170,9 +169,8 @@ function(input, output, session) {
                     fillColor = "grey",
                     fillOpacity = 0.85)
     } else {
-      leafletProxy(mapId = "map") %>%
-        clearGroup("bufferZone")  # If no buffer zone, remove the group
-    }
+      leafletProxy(mapId = "map")
+      }
     
     # Handle ContribFLOs Layer
     if (!is.null(contribFLOs)) {
@@ -185,9 +183,8 @@ function(input, output, session) {
                    opacity = 0.5,
                    options = antpathOptions(delay = 2000))
     } else {
-      leafletProxy(mapId = "map") %>%
-        clearGroup("contribFLOs")  # If no FLOs, remove the group
-    }
+      leafletProxy(mapId = "map")
+      }
     
     # Handle ContribSTPs Layer
     if (!is.null(contribSTPs)) {
@@ -200,9 +197,8 @@ function(input, output, session) {
                          color = "orange",
                          radius = 5)
     } else {
-      leafletProxy(mapId = "map") %>%
-        clearGroup("contribSTPs")  # If no STPs, remove the group
-    }
+      leafletProxy(mapId = "map")
+      }
   })
   
   #Pass some output text to the UI

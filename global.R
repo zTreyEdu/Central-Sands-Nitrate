@@ -92,16 +92,16 @@ buffer <- getBuffer()
 floDataSet <- getFloDataSet()
 stpDataSet <- getStpDataSet()
 
-#Create projected FLOs to display on our map
+# 4 Create projected FLOs to display on our map----
 floDisplaySet <- slice_sample(floDataSet, n = 1500)
 floDisplaySet <- getFLOProjection(floDisplaySet)
 
-#Create a boundary line for our MODPATH model (polygon data)----
+# 5 Create a boundary line for our MODPATH model (polygon data)----
 pathLineBoundary <- st_read(dsn = "Misc_Shapefiles/prelim_ff_model_bounds_proposed.shp")
 pathLineBoundary <- st_transform(pathLineBoundary, crs = 4326) %>%
   mutate(fill_color = "#1C00ff00")
 
-#read in wells (point data)----
+# 6 read in wells (point data)----
 pumpingWells <- st_read(dsn = "Misc_Shapefiles/pumping_well_pts.shp")
 pumpingWells <- st_transform(pumpingWells, crs = 4326)
   

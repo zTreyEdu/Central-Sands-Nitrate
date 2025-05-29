@@ -1,27 +1,12 @@
 #Project Title: Central Sands Nitrate Estimator
 #Project Description: given a location, determine the estimated nitrate level
 
-
-# TODO
-#t03 - figure out what value buffer should be set to
-#t04 - double check my RETURNs statements make sure i'm using correct with words like 'list' and 'dataframe' correctly
-#t08 - add handling for null results
-#t09 - confirm how I handle coordinate input and CRS syncing is correct
-#t10 - is using CRS 3070 okay?
-#t11.1 - review documentation
-#t13 - look at changing function outputs to just add to the same data frame, rather than making a bunch of data frames
-#15 - add proper prediction equation and clean up getEstimatedNitrateLevels
-
-# -------------------Code begins here -----------------------
-
 # ----0 Install packages, load libraries, and load global data----
 #Packages
 #install.packages('sf')
 #install.packages('ggplot2')
 #install.packages('raster')
 #install.packages('dplyr')
-#install.packages('devtools')
-#install.packages('profvis')
 #install.packages("forcats")
 #install.pakcages("tidyr")
 
@@ -33,9 +18,6 @@ library(dplyr)
 library(forcats)
 library(lwgeom)
 library(tidyr)
-#library(devtools)
-#library(profvis)
-
 
 # ----1 Define Functions----
 
@@ -45,14 +27,6 @@ library(tidyr)
 #'            summarizedLandCoverMix - a data frame with one row per land cover and columns for the amount of each land cover
 #'            no3Prediction - a data frame with the no3 prediction. It has the fit value, as well as the prediction interval lower and upper bound
 getEstimatedNitrateLevelsWiscLand <- function(landCoverMix) {
-  
-  # summarizedLandCoverMix <- landCoverMix %>%
-  #   group_by(cls_desc_3) %>%
-  #   summarise(
-  #     LAND_COVER_COUNT = n(),
-  #     LAND_COVER_RELATIVE = (n() / nrow(landCoverMix))
-  #   )
-  
   summarizedLandCoverMix <- landCoverMix %>%
     count(cls_desc_1, cls_desc_3, name = 'LAND_COVER_COUNT')
   
@@ -78,7 +52,7 @@ getEstimatedNitrateLevelsWrapper <- function(landCoverMix,landCoverCode) {
   } else if (landCoverCode == 2) {
     estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsWiscLand(landCoverMix)
   } else{
-    estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsCropScape(landCoverMix) #we'll default to CropScape. CropScape was chosen arbitrarily.
+    estimatedNitrateLevelsReturnList <- getEstimatedNitrateLevelsWiscLand(landCoverMix) #we'll default to WiscLand.
   }
   
   return(estimatedNitrateLevelsReturnList)
@@ -114,7 +88,7 @@ getLandCoverMixWrapper <- function(stpDataSet, contribSTPIDs, timeFrameOfInteres
   } else if (landCoverCode == 2) {
     landCoverMix <- getLandCoverMixWiscLand(stpDataSet, contribSTPIDs, timeFrameOfInterest)
   } else{
-    landCoverMix <- getLandCoverMixCropScape(stpDataSet, contribSTPIDs, timeFrameOfInterest) #we'll default to CropScape. CropScape was chosen arbitrarily.
+    landCoverMix <- getLandCoverMixWiscLand(stpDataSet, contribSTPIDs, timeFrameOfInterest) #we'll default to WIscLand.
   }
   
   return(landCoverMix)
@@ -124,7 +98,7 @@ getLandCoverMixWrapper <- function(stpDataSet, contribSTPIDs, timeFrameOfInteres
 #' 
 #' Use the following codes:
 #'    1 - CropScape
-#'    2 - WiscLand 2, Level 3
+#'    2 - WiscLand
 #'    
 #' @returns a number corresponding to the land cover data set to use
 getLandCoverCode <- function() {
@@ -178,7 +152,7 @@ getTimeFrameOfInterest <- function() {
 #' Buffer size is currently hard-coded, but could be modified to allow for front-end user input
 #' @returns a number for our buffer size
 getBuffer <- function() {
-  buffer = 100 #t03, Ben's was set to 100, so just copying his for now.
+  buffer = 100 #100 meters was chosen somewhat arbitrarily
   return(buffer)
 }
 
@@ -219,12 +193,11 @@ getFloDataSet <- function() {
 #' Objects from this data set will be abbreviated as STP objects
 #' @returns a data frame with our MODPATH starting points
 getStpDataSet <- function() {
-  #stpDataSet <- st_read(dsn = "Data Sets/Particles_updated_June2024/1particle_data_top_startpt.shp") #ztrey - commented out for testing
   stpDataSet <- st_read(dsn = "Data Sets/Particles_Pathlines_May2025/startpoints_with_wiscland.shp")
   return(stpDataSet)
 }
 
-#' given a data frame of SFs, a row, and a column, return a numeric value from a cell
+#' Given a data frame of SFs, a row, and a column, return a numeric value from a cell
 #' @param dataFrame a dataframe of SF objects
 #' @param rowIx the row index to look up
 #' @param columnName the name of the column to look up
@@ -363,7 +336,7 @@ displayCoordsForSTPIDs <- function(stpDataSet, stpIDs) {
   foreignKey <- c("partidloc_" = "partidloc_")
   stpIDs <- stpDataSet %>%
     inner_join(contributingPoints, by = foreignKey) %>%
-    dplyr::select(partidloc_, x, y) #using package::function notation as 'select' is a common name
+    dplyr::select(partidloc_, x, y) #using package::function notation as 'select' is also used by another package
   print(stpIDs)
 }
 
@@ -377,7 +350,7 @@ getLandCoverMixCropScape <- function(stpDataSet, stpIDs, timeFrameOfInterest) {
   foreignKey <- c("partidloc_" = "partidloc_")
   landCoverMix <- stpDataSet %>%
     inner_join(stpIDs, by = foreignKey) %>%
-    dplyr::select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use; #using package::function notation as 'select' is a common name
+    dplyr::select(partidloc_, `CDL_2022_2`) #For now, just use the most recent land use; using package::function notation as 'select' is also used by another package
   
   #Add in the Class Names for the land cover values so us humans can understand
   cropScapeClassNames <- getCropScapeClassNames()
@@ -401,7 +374,6 @@ getSummarizedLandCoverMixCropScape <- function(landCoverMix) {
 }
 
 #' Calculates the estimated nitrate levels given a CropScape land cover mix
-#' t15
 #' @param landCoverMix a data frame with one row per particle IDs and a column for land cover
 #' @returns a list with the following structure:
 #'            summarizedLandCoverMix - a data frame with one row per land cover and columns for the amount of each land cover
@@ -414,13 +386,13 @@ getEstimatedNitrateLevelsCropScape <- function(landCoverMix) {
   #Create our prediction interval
   load("ztreyLinearModel.RData") #named cdlModel
   
-  currentCorn <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Corn"]
+  currentCorn <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME == "Corn"]
   if (length(currentCorn) == 0) {currentCorn <- 0}
   
-  currentSweetCorn <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Sweet Corn"]
+  currentSweetCorn <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME == "Sweet Corn"]
   if (length(currentSweetCorn) == 0) {currentSweetCorn <- 0}
   
-  currentPotato <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME=="Potatoes"]
+  currentPotato <- summarizedLandCoverMix$CDL_2022_Count[summarizedLandCoverMix$CLASS_NAME == "Potatoes"]
   if (length(currentPotato) == 0) {currentPotato <- 0}
   
   currentValues <- data.frame(xCorn = currentCorn, xSweetCorn = currentSweetCorn, xPotato = currentPotato)
@@ -429,9 +401,7 @@ getEstimatedNitrateLevelsCropScape <- function(landCoverMix) {
   no3Prediction <- predict.lm(cdlModel, currentValues, interval = "prediction", level = 0.95)
   
   no3Prediction <- as.data.frame(no3Prediction) #convert to data frame for easier handling later on
-  
-  #ztrey - left off here. Combine no3Prediction and summarizedLandCoverMix into a list and pass them back up the stack.
-  #Then display the NO3 level estimation. I think add this to the Bar Chart interpretation, and just give the range
+
   
   estimatedNitrateLevelsReturnList <- list(summarizedLandCoverMix = summarizedLandCoverMix, no3Prediction = no3Prediction)
   
@@ -484,8 +454,6 @@ createPlots <- function(nitrateEstimatorReturnList,landCoverCode) {
 #' @returns a stacked bar chart contributing zone land cover
 createLandCoverPlotCropScape <- function(landCover) {
   #Stacked bar grouping
-  #t014 I've got options around: 1) should we group individual land covers? 2) should we make a pareto chart or hold specific categories in place?
-  #If I only stack some stuff, then i think color-coding the stacked stuff, and just having everything else be the same color is the way to go. No good to "double encode" with a label and color.
   landCoverStacked <- landCover %>%
     mutate(LandCoverCategory = case_when(
       CLASS_NAME %in% c("Corn", "Potatoes", "Sweet Corn") ~ "High Agriculture",
@@ -494,7 +462,7 @@ createLandCoverPlotCropScape <- function(landCover) {
                         "Shrubland", "Grassland/Pasture",
                         "Barren") ~ "Nature",
       TRUE ~ CLASS_NAME
-    ))
+      ))
   
   landCoverStacked <- landCoverStacked %>%
     group_by(LandCoverCategory) %>%
@@ -519,15 +487,14 @@ createLandCoverPlotCropScape <- function(landCover) {
 }
 
 #' Create a stacked bar chart of WiscLand land covers
-#' This is slightly different than CropScape, since our data is already grouped in a way that we like.
-#' 
+#' This funciont is laid out differently than CropScape, since our data is already grouped in a friendly way
 #' @param landCover a data frame of the landuse mix
 #' @returns a stacked bar chart contributing zone land cover
 createLandCoverPlotWiscLand <- function(landCover) {
   
   stackedPlotTitle = "Land Cover of Contributing Zones"
   stackedBarPlot <- landCover %>%
-    ggplot(aes(x = cls_desc_1, y = LAND_COVER_COUNT, fill = cls_desc_3)) + #the bars will be Level 1, the subbars will be level 3
+    ggplot(aes(x = cls_desc_1, y = LAND_COVER_COUNT, fill = cls_desc_3)) + #the bars will be Level 1, the sub-bars will be level 3
     geom_bar(stat = "identity") +
     labs(x = "Land Cover Category", y = "Count", title = stackedPlotTitle, fill = "Land Cover") +
     theme(title = element_text(size = 19),
@@ -548,7 +515,7 @@ createLandCoverPlotWrapper <- function(landCover, landCoverCode) {
   } else if (landCoverCode == 2) {
     landCoverBarPlot <- createLandCoverPlotWiscLand(landCover)
   } else {
-    landCoverBarPlot <- createLandCoverPlotCropScape(landCover) #default to cropscape as a default
+    landCoverBarPlot <- createLandCoverPlotWiscLand(landCover) #default to WiscLand as a default
   } 
   
   return(landCoverBarPlot)
